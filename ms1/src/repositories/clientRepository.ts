@@ -34,6 +34,13 @@ export const markEmailVerified = async (clientId: string) => {
   });
 };
 
+export const updateWebhookConfig = async (clientId: string, webhookUrl: string, webhookSecret: string) => {
+  return prisma.client.update({
+    where: { id: clientId },
+    data: { webhookUrl, webhookSecret }
+  });
+};
+
 export const createEmailVerification = async (data: { clientId: string; tokenHash: string; expiresAt: Date }) => {
   return prisma.emailVerification.create({
     data

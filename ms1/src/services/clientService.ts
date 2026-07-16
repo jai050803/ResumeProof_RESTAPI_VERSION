@@ -1,62 +1,62 @@
-import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import * as clientRepository from '../repositories/clientRepository';
-import { sendEmailVerificationLink } from './emailService';
+import * as emailService from './emailService';
+import * as jwtService from './jwtService';
+import * as webhookService from './webhookService';
 import { AppError } from '../errors/AppError';
+import { getPrismaClient } from '../config/prismaClient';
 
-export const registerNewClient = async (orgName: string, email: string, passwordRaw: string) => {
+const prisma = getPrismaClient();
+
+export const registerNewClient = async (orgName: string, email: string, passwordHash: string) => {
   const existingClient = await clientRepository.findClientByEmail(email);
   if (existingClient) {
-    throw new AppError('email_already_registered', 409);
+    throw new AppError('email_in_use', 400);
   }
 
-  const passwordHash = await bcrypt.hash(passwordRaw, 10);
-  
-  const client = await clientRepository.createClient({
-    name: orgName,
-    email,
-    passwordHash
-  });
+  const client = await clientRepository.createClient({ name: orgName, email, passwordHash });
 
   const rawToken = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + 24);
-
-  await clientRepository.createEmailVerification({
-    clientId: client.id,
-    tokenHash,
-    expiresAt
+  await prisma.emailVerification.create({
+    data: {
+      clientId: client.id,
+      tokenHash,
+      expiresAt
+    }
   });
 
-  await sendEmailVerificationLink(email, rawToken);
+  await emailService.sendEmailVerificationLink(email, rawToken);
 
   return client;
 };
 
 export const verifyClientEmail = async (rawToken: string) => {
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-  
-  const verification = await clientRepository.findEmailVerificationByHash(tokenHash);
+
+  const verification = await prisma.emailVerification.findFirst({
+    where: { tokenHash }
+  });
+
   if (!verification) {
-    throw new AppError('invalid_or_expired_token', 400);
+    throw new AppError('invalid_token', 400);
   }
 
-  if (new Date() > verification.expiresAt) {
-    await clientRepository.deleteEmailVerification(verification.id);
-    throw new AppError('invalid_or_expired_token', 400);
+  if (verification.expiresAt < new Date()) {
+    throw new AppError('token_expired', 400);
   }
 
   await clientRepository.markEmailVerified(verification.clientId);
-  await clientRepository.deleteEmailVerification(verification.id);
+  await prisma.emailVerification.delete({ where: { id: verification.id } });
 
   return { success: true };
 };
 
-export const authenticateClient = async (email: string, passwordRaw: string) => {
+export const authenticateClient = async (email: string, passwordPlain: string) => {
   const client = await clientRepository.findClientByEmail(email);
-  
   if (!client) {
     throw new AppError('invalid_credentials', 401);
   }
@@ -65,11 +65,37 @@ export const authenticateClient = async (email: string, passwordRaw: string) => 
     throw new AppError('email_not_verified', 403);
   }
 
-  const isMatch = await bcrypt.compare(passwordRaw, client.passwordHash);
+  const isMatch = await bcrypt.compare(passwordPlain, client.passwordHash);
   if (!isMatch) {
     throw new AppError('invalid_credentials', 401);
   }
 
-  const { issueTokenPair } = await import('./jwtService');
-  return issueTokenPair(client.id, client.email);
+  const tokens = await jwtService.issueTokenPair(client.id, client.email);
+  return tokens;
+};
+
+export const setWebhookConfig = async (clientId: string, webhookUrl: string) => {
+  const webhookSecret = crypto.randomBytes(32).toString('hex');
+  
+  await webhookService.sendWebhookTestPing(webhookUrl, webhookSecret);
+  
+  await clientRepository.updateWebhookConfig(clientId, webhookUrl, webhookSecret);
+  
+  return { webhookSecret };
+};
+
+export const getProfile = async (clientId: string) => {
+  const client = await clientRepository.findClientById(clientId);
+  if (!client) {
+    throw new AppError('client_not_found', 404);
+  }
+  
+  return {
+    name: client.name,
+    email: client.email,
+    plan: client.plan,
+    monthlyQuota: client.monthlyQuota,
+    isVerified: client.isVerified,
+    webhookUrl: client.webhookUrl
+  };
 };
