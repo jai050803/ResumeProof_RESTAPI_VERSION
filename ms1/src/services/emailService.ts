@@ -1,0 +1,52 @@
+import nodemailer from 'nodemailer';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
+
+let transporter: nodemailer.Transporter | null = null;
+
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465, // true for 465, false for other ports
+      auth: {
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
+      },
+    });
+  }
+  return transporter;
+};
+
+export const sendEmailVerificationLink = async (to: string, rawToken: string) => {
+  try {
+    const link = `${env.DOCS_PORTAL_URL}/verify-email?token=${rawToken}`;
+    
+    if (env.NODE_ENV === 'development') {
+      logger.info(`[DEV] Verification link for ${to}: ${link}`);
+    }
+
+    const mailOptions = {
+      from: env.SMTP_USER,
+      to,
+      subject: 'Verify your ResumeProof account',
+      html: `
+        <p>Welcome to ResumeProof!</p>
+        <p>Please verify your email by clicking the link below:</p>
+        <a href="${link}">${link}</a>
+        <p>This link expires in 24 hours.</p>
+      `,
+    };
+
+    const mailer = getTransporter();
+    await mailer.sendMail(mailOptions);
+    logger.info(`Sent verification email to ${to}`);
+  } catch (error) {
+    logger.error(`Failed to send verification email to ${to}`, error);
+    // Ignore error in development if dummy SMTP isn't working
+    if (env.NODE_ENV !== 'development') {
+      throw error;
+    }
+  }
+};
