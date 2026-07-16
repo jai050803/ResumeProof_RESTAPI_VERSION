@@ -9,3 +9,16 @@ export const registerSchema = z.object({
 export const verifyEmailQuerySchema = z.object({
   token: z.string().min(1, 'Token is required')
 });
+
+export const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required')
+});
+
+export const refreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required')
+});
+
+export const logoutSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required')
+});

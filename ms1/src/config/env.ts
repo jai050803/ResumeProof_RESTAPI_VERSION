@@ -14,6 +14,9 @@ const envSchema = z.object({
   SMTP_USER: z.string().min(1, "SMTP_USER is required"),
   SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
   DOCS_PORTAL_URL: z.string().url("DOCS_PORTAL_URL must be a valid URL"),
+  JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
+  JWT_ACCESS_TTL: z.string().default('1h'),
+  JWT_REFRESH_TTL: z.string().default('30d'),
 });
 
 const _env = envSchema.safeParse(process.env);

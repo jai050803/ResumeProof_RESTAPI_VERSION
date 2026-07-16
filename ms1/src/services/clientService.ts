@@ -53,3 +53,23 @@ export const verifyClientEmail = async (rawToken: string) => {
 
   return { success: true };
 };
+
+export const authenticateClient = async (email: string, passwordRaw: string) => {
+  const client = await clientRepository.findClientByEmail(email);
+  
+  if (!client) {
+    throw new AppError('invalid_credentials', 401);
+  }
+
+  if (!client.isVerified) {
+    throw new AppError('email_not_verified', 403);
+  }
+
+  const isMatch = await bcrypt.compare(passwordRaw, client.passwordHash);
+  if (!isMatch) {
+    throw new AppError('invalid_credentials', 401);
+  }
+
+  const { issueTokenPair } = await import('./jwtService');
+  return issueTokenPair(client.id, client.email);
+};

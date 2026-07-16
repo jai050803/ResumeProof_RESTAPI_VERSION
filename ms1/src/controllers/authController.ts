@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as clientService from '../services/clientService';
-import { registerSchema, verifyEmailQuerySchema } from '../schemas/authSchemas';
+import { registerSchema, verifyEmailQuerySchema, loginSchema, refreshSchema, logoutSchema } from '../schemas/authSchemas';
 import { AppError } from '../errors/AppError';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,6 +32,59 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     await clientService.verifyClientEmail(token);
 
     res.status(200).json({ message: 'Email successfully verified' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parseResult = loginSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new AppError(parseResult.error.issues.map((e: any) => e.message).join(', '), 400);
+    }
+    const { email, password } = parseResult.data;
+    const tokens = await clientService.authenticateClient(email, password);
+    res.status(200).json(tokens);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refresh = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parseResult = refreshSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new AppError(parseResult.error.issues.map((e: any) => e.message).join(', '), 400);
+    }
+    const { refreshToken } = parseResult.data;
+    
+    // Lazy import to avoid circular dependencies if any
+    const { rotateRefreshToken } = await import('../services/jwtService');
+    const tokens = await rotateRefreshToken(refreshToken);
+    
+    res.status(200).json(tokens);
+  } catch (error: any) {
+    if (error && error.message === 'invalid_or_expired_token') {
+      next(new AppError('invalid_or_expired_token', 401));
+    } else {
+      next(error);
+    }
+  }
+};
+
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const parseResult = logoutSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new AppError(parseResult.error.issues.map((e: any) => e.message).join(', '), 400);
+    }
+    const { refreshToken } = parseResult.data;
+    
+    const { revokeSession } = await import('../services/jwtService');
+    await revokeSession(refreshToken);
+    
+    res.status(200).json({ message: 'logged_out' });
   } catch (error) {
     next(error);
   }
