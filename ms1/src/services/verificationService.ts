@@ -71,10 +71,6 @@ export const getVerificationStatus = async (clientId: string, trackingId: string
     status: txn.status,
     createdAt: txn.createdAt,
     completedAt: txn.completedAt,
-    result: txn.result ? {
-      confidenceScore: txn.result.confidenceScore,
-      status: txn.result.status,
-      aiAnalysis: txn.result.aiAnalysis
-    } : null
+    result: txn.result
   };
 };

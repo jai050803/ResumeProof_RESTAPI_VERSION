@@ -1,4 +1,5 @@
 import express from 'express';
+import { startCleanupJob } from './jobs/cleanupJob';
 import helmet from 'helmet';
 import cors from 'cors';
 import { env } from './config/env';
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 app.use(globalErrorHandler);
 
 const startServer = () => {
+  startCleanupJob();
   app.listen(env.MS1_PORT, () => {
     logger.info(`Server is running on port ${env.MS1_PORT} in ${env.NODE_ENV} mode`);
   });

@@ -6,6 +6,7 @@ import settingsRoutes from './settingsRoutes';
 import usageRoutes from './usageRoutes';
 import verifyRoutes from './verifyRoutes';
 import pollRoutes from './pollRoutes';
+import internalRoutes from './internalRoutes';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/v1/settings', settingsRoutes);
 router.use('/v1/usage', usageRoutes);
 router.use('/v1/verify', verifyRoutes);
 router.use('/v1/verify', pollRoutes);
+router.use('/internal', internalRoutes);
 
 export default router;

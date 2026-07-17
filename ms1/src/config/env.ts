@@ -17,6 +17,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   JWT_ACCESS_TTL: z.string().default('1h'),
   JWT_REFRESH_TTL: z.string().default('30d'),
+  INTERNAL_SECRET: z.string().min(1, "INTERNAL_SECRET is required"),
 });
 
 const _env = envSchema.safeParse(process.env);
