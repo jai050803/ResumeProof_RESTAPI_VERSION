@@ -5,7 +5,9 @@ from pydantic import Field
 class Settings(BaseSettings):
     redis_url: str = Field(alias="REDIS_URL")
     database_url: str = Field(alias="DATABASE_URL")
-    groq_api_key: str = Field(alias="GROQ_API_KEY")
+    groq_api_key: str = Field(default="", alias="GROQ_API_KEY")
+    groq_api_key_1: str = Field(default="", alias="GROQ_API_KEY_1")
+    groq_api_key_2: str = Field(default="", alias="GROQ_API_KEY_2")
     github_token: str = Field(alias="GITHUB_TOKEN")
     internal_secret: str = Field(alias="INTERNAL_SECRET")
     ms1_internal_url: str = Field(alias="MS1_INTERNAL_URL")

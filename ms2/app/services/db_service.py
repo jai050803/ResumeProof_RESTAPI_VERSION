@@ -147,3 +147,26 @@ def update_job_record(transaction_id: str, status: str, error_message: str = Non
             cur.execute(sql, params)
             
     logger.info(f"Job for transaction {transaction_id} status updated to {status}")
+
+def get_transaction_details(transaction_id: str) -> dict:
+    """
+    Fetches the transaction details (githubUrl, resumeText, jdText, clientId) from Postgres.
+    """
+    sql = """
+    SELECT "githubUrl", "resumeText", "jdText", "clientId"
+    FROM transactions
+    WHERE id = %s
+    """
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (transaction_id,))
+            row = cur.fetchone()
+            if not row:
+                raise ValueError(f"Transaction {transaction_id} not found in database")
+            
+            return {
+                "githubUrl": row[0],
+                "resumeText": row[1],
+                "jdText": row[2],
+                "clientId": row[3]
+            }
