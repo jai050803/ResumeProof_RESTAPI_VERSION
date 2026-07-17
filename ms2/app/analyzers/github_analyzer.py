@@ -52,40 +52,34 @@ def fetch_public_repos(username: str) -> list:
         repo_list = []
         rate_limit_exceeded = False
         
+        # Common tech keywords to scan locally to avoid making separate HTTP calls for languages/topics
+        tech_keywords = [
+            "python", "typescript", "javascript", "react", "node", "postgres", 
+            "mysql", "mongodb", "docker", "aws", "kubernetes", "django", 
+            "flask", "express", "html", "css", "java", "c++", "c#", "golang", 
+            "go", "ruby", "rails", "php", "laravel", "vue", "angular", "nextjs", 
+            "next.js", "nestjs", "prisma", "firebase", "sqlite", "redis", "graphql"
+        ]
+        
         for r in repos:
             if r.fork:
                 continue
             
-            languages = []
+            # Map basic properties
+            languages = [r.language] if r.language else []
             topics = []
             
-            if not rate_limit_exceeded:
-                # Fetch languages
-                try:
-                    languages = list(r.get_languages().keys())
-                except GithubException as ge:
-                    if ge.status == 403:
-                        logger.warning(f"GitHub Rate Limit hit while fetching languages for {r.name}. Falling back to default properties.")
-                        rate_limit_exceeded = True
-                    languages = [r.language] if r.language else []
-                except Exception:
-                    languages = [r.language] if r.language else []
-                
-                # Fetch topics
-                if not rate_limit_exceeded:
-                    try:
-                        topics = r.get_topics()
-                    except GithubException as ge:
-                        if ge.status == 403:
-                            logger.warning(f"GitHub Rate Limit hit while fetching topics for {r.name}. Falling back to empty topics.")
-                            rate_limit_exceeded = True
-                        topics = []
-                    except Exception:
-                        topics = []
-            else:
-                # Rate limit exceeded fallback
-                languages = [r.language] if r.language else []
-                topics = []
+            # Extract local topics from repository name and description to avoid hitting rate limits
+            name_lower = r.name.lower() if r.name else ""
+            desc_lower = r.description.lower() if r.description else ""
+            
+            for tech in tech_keywords:
+                if tech in name_lower or tech in desc_lower:
+                    topics.append(tech)
+            
+            # Ensure the primary language is also in our languages list
+            if r.language and r.language.lower() not in [l.lower() for l in languages]:
+                languages.append(r.language)
 
             repo_list.append({
                 "name": r.name,
@@ -93,7 +87,7 @@ def fetch_public_repos(username: str) -> list:
                 "description": r.description,
                 "language": r.language,
                 "languages": languages,
-                "topics": topics,
+                "topics": list(set(topics)),
                 "created_at": r.created_at.isoformat(),
                 "pushed_at": r.pushed_at.isoformat(),
                 "size_kb": r.size,
