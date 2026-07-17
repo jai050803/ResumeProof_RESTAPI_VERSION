@@ -43,10 +43,10 @@ def fetch_public_repos(username: str) -> list:
     g = get_authenticated_github_client()
     try:
         user = g.get_user(username)
-        # Request up to 100 items per page
-        repos_paginated = user.get_repos(type="owner", per_page=100)
+        # Request repos owned by the user
+        repos_paginated = user.get_repos(type="owner")
         
-        # Get only the first page to prevent paginating thousands of repositories and blocking/sleeping
+        # Get only the first page (typically 30 items) to prevent paginating thousands of repositories
         repos = repos_paginated.get_page(0)
         
         repo_list = []
