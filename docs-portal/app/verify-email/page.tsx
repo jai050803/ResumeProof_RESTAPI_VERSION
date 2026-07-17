@@ -9,11 +9,16 @@ function VerifyEmailContent() {
   const token = searchParams.get('token');
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
+  const hasCalled = React.useRef(false);
+
   useEffect(() => {
     if (!token) {
       setStatus('error');
       return;
     }
+    
+    if (hasCalled.current) return;
+    hasCalled.current = true;
 
     api.get(`/v1/auth/verify-email?token=${token}`)
       .then(() => setStatus('success'))

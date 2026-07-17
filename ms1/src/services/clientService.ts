@@ -9,11 +9,14 @@ import { getPrismaClient } from '../config/prismaClient';
 
 const prisma = getPrismaClient();
 
-export const registerNewClient = async (orgName: string, email: string, passwordHash: string) => {
+export const registerNewClient = async (orgName: string, email: string, passwordPlain: string) => {
   const existingClient = await clientRepository.findClientByEmail(email);
   if (existingClient) {
     throw new AppError('email_in_use', 400);
   }
+
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(passwordPlain, salt);
 
   const client = await clientRepository.createClient({ name: orgName, email, passwordHash });
 

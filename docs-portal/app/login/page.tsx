@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -63,13 +64,22 @@ export default function LoginPage() {
               <label className="block text-zinc-400 text-sm font-medium">Password</label>
               <a href="#" className="text-indigo-400 text-sm hover:text-indigo-300">Forgot password?</a>
             </div>
-            <input 
-              type="password" 
-              required
-              className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required
+                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 pr-16 text-white focus:outline-none focus:border-indigo-500 transition"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400 hover:text-white font-medium focus:outline-none"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
 
           <button 
