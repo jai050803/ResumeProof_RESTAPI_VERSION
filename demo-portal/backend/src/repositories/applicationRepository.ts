@@ -1,0 +1,46 @@
+import { query } from '../config/db';
+
+export interface CreateApplicationDto {
+  jobId: string;
+  candidateName: string;
+  candidateEmail: string;
+  githubUrl: string;
+  resumeFilename: string;
+}
+
+export const createApplication = async (data: CreateApplicationDto) => {
+  const res = await query(
+    `INSERT INTO applications (job_id, candidate_name, candidate_email, github_url, resume_filename, status) 
+     VALUES ($1, $2, $3, $4, $5, 'received') RETURNING id`,
+    [data.jobId, data.candidateName, data.candidateEmail, data.githubUrl, data.resumeFilename]
+  );
+  return res.rows[0].id;
+};
+
+export const findAllApplications = async () => {
+  const sql = `
+    SELECT a.*, j.title as job_title 
+    FROM applications a 
+    JOIN jobs j ON a.job_id = j.id 
+    ORDER BY a.created_at DESC
+  `;
+  const res = await query(sql);
+  return res.rows;
+};
+
+export const findApplicationsByJob = async (jobId: string) => {
+  const sql = `
+    SELECT a.*, j.title as job_title 
+    FROM applications a 
+    JOIN jobs j ON a.job_id = j.id 
+    WHERE a.job_id = $1 
+    ORDER BY a.created_at DESC
+  `;
+  const res = await query(sql, [jobId]);
+  return res.rows;
+};
+
+export const countApplicationsByJob = async (jobId: string) => {
+  const res = await query('SELECT count(*) FROM applications WHERE job_id = $1', [jobId]);
+  return parseInt(res.rows[0].count, 10);
+};
