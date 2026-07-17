@@ -38,12 +38,17 @@ def verify_github_user_exists(username: str) -> dict:
 def fetch_public_repos(username: str) -> list:
     """
     Fetches non-forked public repositories owned by the user.
-    Uses rate-limit fallback protection.
+    Uses rate-limit fallback protection. Limits fetching to the first page (max 100 repos) to avoid hanging.
     """
     g = get_authenticated_github_client()
     try:
         user = g.get_user(username)
-        repos = user.get_repos(type="owner")
+        # Request up to 100 items per page
+        repos_paginated = user.get_repos(type="owner", per_page=100)
+        
+        # Get only the first page to prevent paginating thousands of repositories and blocking/sleeping
+        repos = repos_paginated.get_page(0)
+        
         repo_list = []
         rate_limit_exceeded = False
         

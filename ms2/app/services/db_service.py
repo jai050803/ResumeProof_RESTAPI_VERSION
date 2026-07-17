@@ -1,172 +1,68 @@
-import uuid
-import psycopg2
-from psycopg2.extras import Json
-from psycopg2.pool import SimpleConnectionPool
-from contextlib import contextmanager
+import httpx
 from app.config import settings
 from app.utils.logger import get_logger
 
 logger = get_logger("db_service")
 
-# Initialize Connection Pool
-try:
-    # Clean up Prisma-specific query parameters (e.g. ?schema=public) which psycopg2 doesn't support
-    dsn_cleaned = settings.database_url
-    if "?" in dsn_cleaned:
-        dsn_cleaned = dsn_cleaned.split("?")[0]
-        
-    db_pool = SimpleConnectionPool(
-        minconn=1,
-        maxconn=10,
-        dsn=dsn_cleaned
-    )
-    logger.info("Database connection pool initialized.")
-except Exception as e:
-    logger.error(f"Failed to initialize database connection pool: {e}")
-    raise e
-
-@contextmanager
-def get_db_connection():
-    conn = db_pool.getconn()
-    try:
-        yield conn
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise e
-    finally:
-        db_pool.putconn(conn)
-
-def write_verification_result(transaction_id: str, result: dict) -> str:
-    """
-    Inserts a verification result into the results table.
-    Supports upsert on transactionId conflict.
-    """
-    result_id = str(uuid.uuid4())
-    github_data = result.get("github", {})
-    
-    score = result.get("confidenceScore")
-    status = result.get("status")
-    username = github_data.get("username")
-    repos_found = github_data.get("reposFound")
-    claimed_projects = github_data.get("claimedProjects")
-    verified_projects = github_data.get("verifiedProjects")
-    commit_authorship = github_data.get("commitAuthorship")
-    skill_alignment = result.get("skillAlignment")
-    
-    matched_skills = Json(result.get("matchedSkills", []))
-    missing_skills = Json(result.get("missingSkills", []))
-    flags = Json(result.get("flags", []))
-    
-    sql = """
-    INSERT INTO results (
-        id, "transactionId", "confidenceScore", status, "githubUsername", 
-        "reposFound", "claimedProjects", "verifiedProjects", "commitAuthorship", 
-        "skillAlignment", "matchedSkills", "missingSkills", flags, "createdAt"
-    ) VALUES (
-        %s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, 
-        %s, %s, %s, %s, NOW()
-    )
-    ON CONFLICT ("transactionId") DO UPDATE SET
-        "confidenceScore" = EXCLUDED."confidenceScore",
-        status = EXCLUDED.status,
-        "githubUsername" = EXCLUDED."githubUsername",
-        "reposFound" = EXCLUDED."reposFound",
-        "claimedProjects" = EXCLUDED."claimedProjects",
-        "verifiedProjects" = EXCLUDED."verifiedProjects",
-        "commitAuthorship" = EXCLUDED."commitAuthorship",
-        "skillAlignment" = EXCLUDED."skillAlignment",
-        "matchedSkills" = EXCLUDED."matchedSkills",
-        "missingSkills" = EXCLUDED."missingSkills",
-        flags = EXCLUDED.flags
-    """
-    
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, (
-                result_id, transaction_id, score, status, username,
-                repos_found, claimed_projects, verified_projects, commit_authorship,
-                skill_alignment, matched_skills, missing_skills, flags
-            ))
-            
-    logger.info(f"Result row written/updated for transaction {transaction_id}")
-    return result_id
-
-def update_transaction_status(transaction_id: str, status: str, completed: bool = False):
-    """
-    Updates the status and completedAt of a transaction.
-    """
-    if completed:
-        sql = """
-        UPDATE transactions 
-        SET status = %s, "completedAt" = NOW() 
-        WHERE id = %s
-        """
-    else:
-        sql = """
-        UPDATE transactions 
-        SET status = %s 
-        WHERE id = %s
-        """
-        
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, (status, transaction_id))
-            
-    logger.info(f"Transaction {transaction_id} status updated to {status}")
-
-def update_job_record(transaction_id: str, status: str, error_message: str = None, active: bool = False):
-    """
-    Updates the job execution state, logging timestamps and failure messages if present.
-    """
-    if active:
-        sql = """
-        UPDATE jobs 
-        SET status = %s, attempts = attempts + 1, "startedAt" = NOW()
-        WHERE "transactionId" = %s
-        """
-        params = (status, transaction_id)
-    elif error_message:
-        sql = """
-        UPDATE jobs 
-        SET status = %s, "errorMessage" = %s, "finishedAt" = NOW()
-        WHERE "transactionId" = %s
-        """
-        params = (status, error_message, transaction_id)
-    else:
-        sql = """
-        UPDATE jobs 
-        SET status = %s, "finishedAt" = NOW()
-        WHERE "transactionId" = %s
-        """
-        params = (status, transaction_id)
-        
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, params)
-            
-    logger.info(f"Job for transaction {transaction_id} status updated to {status}")
+def _get_headers():
+    return {
+        "Content-Type": "application/json",
+        "X-Internal-Secret": settings.internal_secret
+    }
 
 def get_transaction_details(transaction_id: str) -> dict:
     """
-    Fetches the transaction details (githubUrl, resumeText, jdText, clientId) from Postgres.
+    Fetches the transaction details (githubUrl, resumeText, jdText, clientId) from MS1.
     """
-    sql = """
-    SELECT "githubUrl", "resumeText", "jdText", "clientId"
-    FROM transactions
-    WHERE id = %s
+    url = f"{settings.ms1_internal_url}/internal/transaction/{transaction_id}"
+    logger.info(f"Fetching transaction details from MS1: {url}")
+    try:
+        response = httpx.get(url, headers=_get_headers(), timeout=10.0)
+        if response.status_code != 200:
+            raise ValueError(f"Failed to fetch transaction details from MS1: {response.text}")
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error fetching transaction details from MS1: {e}")
+        raise e
+
+def write_verification_result(transaction_id: str, result: dict) -> str:
     """
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, (transaction_id,))
-            row = cur.fetchone()
-            if not row:
-                raise ValueError(f"Transaction {transaction_id} not found in database")
-            
-            return {
-                "githubUrl": row[0],
-                "resumeText": row[1],
-                "jdText": row[2],
-                "clientId": row[3]
-            }
+    Placeholder/stub in MS2 since writing results is handled by MS1's /internal/result handoff.
+    """
+    logger.info(f"write_verification_result called for {transaction_id}. The handoff step will persist this to Postgres.")
+    return transaction_id
+
+def update_transaction_status(transaction_id: str, status: str, completed: bool = False):
+    """
+    Updates the transaction status in MS1.
+    """
+    url = f"{settings.ms1_internal_url}/internal/status"
+    payload = {
+        "transactionId": transaction_id,
+        "status": status
+    }
+    logger.info(f"Updating transaction status to {status} via MS1 internal route...")
+    try:
+        response = httpx.post(url, json=payload, headers=_get_headers(), timeout=10.0)
+        if response.status_code != 200:
+            logger.error(f"MS1 rejected transaction status update: {response.text}")
+    except Exception as e:
+        logger.error(f"Failed to update transaction status via MS1: {e}")
+
+def update_job_record(transaction_id: str, status: str, error_message: str = None, active: bool = False):
+    """
+    Updates the job execution state in MS1.
+    """
+    url = f"{settings.ms1_internal_url}/internal/status"
+    payload = {
+        "transactionId": transaction_id,
+        "status": status,
+        "errorMessage": error_message
+    }
+    logger.info(f"Updating job status to {status} via MS1 internal route...")
+    try:
+        response = httpx.post(url, json=payload, headers=_get_headers(), timeout=10.0)
+        if response.status_code != 200:
+            logger.error(f"MS1 rejected job status update: {response.text}")
+    except Exception as e:
+        logger.error(f"Failed to update job status via MS1: {e}")
