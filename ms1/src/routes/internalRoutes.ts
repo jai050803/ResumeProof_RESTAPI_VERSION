@@ -6,7 +6,5 @@ const router = Router();
 
 router.use(internalAuthMiddleware);
 router.post('/result', internalController.handleResult);
-router.get('/transaction/:transactionId', internalController.getTransactionDetails);
-router.post('/status', internalController.handleStatusUpdate);
 
 export default router;

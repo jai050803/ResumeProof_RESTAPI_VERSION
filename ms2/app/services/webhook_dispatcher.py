@@ -5,10 +5,7 @@ from app.utils.logger import get_logger
 logger = get_logger("webhook_dispatcher")
 
 def dispatch_webhook_to_client(transaction_id: str, client_id: str, result: dict):
-    """
-    Hands off the verification result to MS1 by calling POST /internal/result.
-    MS1 handles webhook delivery and updates the webhook_deliveries table.
-    """
+   
     github = result.get("github", {})
     result_data = {
         "confidenceScore": result.get("confidenceScore"),

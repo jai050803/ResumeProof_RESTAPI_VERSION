@@ -24,3 +24,12 @@ export const apply = async (req: Request, res: Response, next: NextFunction) => 
     next(error);
   }
 };
+
+export const checkStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const app = await applicationService.checkApplicationStatus(req.params.applicationId);
+    res.json(app);
+  } catch (error) {
+    next(error);
+  }
+};

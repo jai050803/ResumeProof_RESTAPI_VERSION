@@ -44,3 +44,22 @@ export const countApplicationsByJob = async (jobId: string) => {
   const res = await query('SELECT count(*) FROM applications WHERE job_id = $1', [jobId]);
   return parseInt(res.rows[0].count, 10);
 };
+
+export const updateApplicationTransaction = async (id: string, transactionId: string) => {
+  await query(
+    'UPDATE applications SET transaction_id = $1, status = $2 WHERE id = $3',
+    [transactionId, 'processing', id]
+  );
+};
+
+export const updateApplicationResult = async (id: string, status: string, result: any) => {
+  await query(
+    'UPDATE applications SET status = $1, verification_result = $2 WHERE id = $3',
+    [status, JSON.stringify(result), id]
+  );
+};
+
+export const findApplicationById = async (id: string) => {
+  const res = await query('SELECT * FROM applications WHERE id = $1', [id]);
+  return res.rows[0];
+};

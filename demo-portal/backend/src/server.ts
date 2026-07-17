@@ -15,6 +15,7 @@ app.use(express.json());
 
 app.use('/api/jobs', jobRoutes);
 app.post('/api/apply', uploadMiddleware.single('resume'), applyController.apply);
+app.get('/api/apply/:applicationId/status', applyController.checkStatus);
 app.get('/api/admin/applications', adminController.getAllApplications);
 app.get('/api/admin/jobs/:jobId/applications', adminController.getApplicationsByJobId);
 

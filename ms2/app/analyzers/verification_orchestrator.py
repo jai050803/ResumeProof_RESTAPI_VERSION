@@ -44,14 +44,14 @@ def fetch_github_data_node(state: AgentState) -> Dict[str, Any]:
     """
     Node 1: Extract username, check if exists, fetch repos, parse projects, match, and check authorship.
     """
-    github_url = state.get("github_url") or ""
+    github_url = state.get("github_url", "")
     resume_text = state.get("resume_text", "")
     
     logger.info(f"Starting fetch_github_data_node for URL: {github_url}")
     
     # Clean username from URL
     try:
-        username = github_url.rstrip("/").split("/")[-1] if github_url else ""
+        username = github_url.rstrip("/").split("/")[-1]
     except Exception:
         logger.error(f"Failed to parse username from URL: {github_url}")
         return {"github_user_exists": False}
@@ -182,14 +182,13 @@ def build_final_result_node(state: AgentState) -> Dict[str, Any]:
     github_user_exists = state.get("github_user_exists", False)
     
     if not github_user_exists:
-        github_url = state.get("github_url") or ""
-        username_fallback = github_url.rstrip("/").split("/")[-1] if github_url else "unknown"
+        github_url_str = state.get("github_url") or ""
         final_result = {
             "transactionId": transaction_id,
             "status": "rejected",
             "confidenceScore": 0,
             "github": {
-                "username": username_fallback,
+                "username": github_url_str.rstrip("/").split("/")[-1] if github_url_str else "",
                 "exists": False,
                 "reposFound": 0,
                 "claimedProjects": 0,
@@ -286,38 +285,33 @@ def run_full_verification(job_data: dict) -> dict:
     """
     Executes the entire verification graph end-to-end for the given job data.
     """
-    transaction_id = job_data.get("transactionId")
-    logger.info(f"Invoking verification graph for Transaction ID: {transaction_id}")
+    logger.info(f"Invoking verification graph for Transaction ID: {job_data.get('transactionId')}")
+    
+    initial_state = {
+        "transaction_id": job_data.get("transactionId"),
+        "github_url": job_data.get("githubUrl"),
+        "resume_text": job_data.get("resumeText", ""),
+        "jd_text": job_data.get("jdText", ""),
+        "client_id": job_data.get("clientId", ""),
+        "github_user_exists": False,
+        "github_user_data": {},
+        "github_repos": [],
+        "claimed_projects": [],
+        "project_matches": [],
+        "authorship_results": [],
+        "account_health": {},
+        "ai_alignment": {},
+        "confidence_score": 0,
+        "status": "flagged",
+        "flags": [],
+        "final_result": {}
+    }
     
     try:
         from app.services import db_service
-        
-        # Load transaction details directly from PostgreSQL database (since Redis payload only enqueues transactionId)
-        tx_details = db_service.get_transaction_details(transaction_id)
-        
-        initial_state = {
-            "transaction_id": transaction_id,
-            "github_url": tx_details.get("githubUrl"),
-            "resume_text": tx_details.get("resumeText", ""),
-            "jd_text": tx_details.get("jdText", ""),
-            "client_id": tx_details.get("clientId", ""),
-            "github_user_exists": False,
-            "github_user_data": {},
-            "github_repos": [],
-            "claimed_projects": [],
-            "project_matches": [],
-            "authorship_results": [],
-            "account_health": {},
-            "ai_alignment": {},
-            "confidence_score": 0,
-            "status": "flagged",
-            "flags": [],
-            "final_result": {}
-        }
-        
         # Mark job as active in the database
-        db_service.update_job_record(transaction_id, "active", active=True)
-        db_service.update_transaction_status(transaction_id, "processing")
+        db_service.update_job_record(job_data.get("transactionId"), "active", active=True)
+        db_service.update_transaction_status(job_data.get("transactionId"), "processing")
         
         final_state = compiled_graph.invoke(initial_state)
         return final_state.get("final_result", {})
@@ -325,8 +319,8 @@ def run_full_verification(job_data: dict) -> dict:
         logger.error(f"Unhandled graph execution error: {e}")
         try:
             from app.services import db_service
-            db_service.update_job_record(transaction_id, "failed", error_message=str(e))
-            db_service.update_transaction_status(transaction_id, "failed")
+            db_service.update_job_record(job_data.get("transactionId"), "failed", error_message=str(e))
+            db_service.update_transaction_status(job_data.get("transactionId"), "failed")
         except Exception as db_err:
             logger.error(f"Failed to record unhandled failure status: {db_err}")
         raise e
