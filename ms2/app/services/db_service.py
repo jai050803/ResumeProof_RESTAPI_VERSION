@@ -10,10 +10,15 @@ logger = get_logger("db_service")
 
 # Initialize Connection Pool
 try:
+    # Clean up Prisma-specific query parameters (e.g. ?schema=public) which psycopg2 doesn't support
+    dsn_cleaned = settings.database_url
+    if "?" in dsn_cleaned:
+        dsn_cleaned = dsn_cleaned.split("?")[0]
+        
     db_pool = SimpleConnectionPool(
         minconn=1,
         maxconn=10,
-        dsn=settings.database_url
+        dsn=dsn_cleaned
     )
     logger.info("Database connection pool initialized.")
 except Exception as e:

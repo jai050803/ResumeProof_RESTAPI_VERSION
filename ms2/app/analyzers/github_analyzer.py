@@ -38,21 +38,49 @@ def verify_github_user_exists(username: str) -> dict:
 def fetch_public_repos(username: str) -> list:
     """
     Fetches non-forked public repositories owned by the user.
+    Uses rate-limit fallback protection.
     """
     g = get_authenticated_github_client()
     try:
         user = g.get_user(username)
         repos = user.get_repos(type="owner")
         repo_list = []
+        rate_limit_exceeded = False
+        
         for r in repos:
             if r.fork:
                 continue
             
-            # Fetch languages
-            try:
-                languages = list(r.get_languages().keys())
-            except Exception:
+            languages = []
+            topics = []
+            
+            if not rate_limit_exceeded:
+                # Fetch languages
+                try:
+                    languages = list(r.get_languages().keys())
+                except GithubException as ge:
+                    if ge.status == 403:
+                        logger.warning(f"GitHub Rate Limit hit while fetching languages for {r.name}. Falling back to default properties.")
+                        rate_limit_exceeded = True
+                    languages = [r.language] if r.language else []
+                except Exception:
+                    languages = [r.language] if r.language else []
+                
+                # Fetch topics
+                if not rate_limit_exceeded:
+                    try:
+                        topics = r.get_topics()
+                    except GithubException as ge:
+                        if ge.status == 403:
+                            logger.warning(f"GitHub Rate Limit hit while fetching topics for {r.name}. Falling back to empty topics.")
+                            rate_limit_exceeded = True
+                        topics = []
+                    except Exception:
+                        topics = []
+            else:
+                # Rate limit exceeded fallback
                 languages = [r.language] if r.language else []
+                topics = []
 
             repo_list.append({
                 "name": r.name,
@@ -60,7 +88,7 @@ def fetch_public_repos(username: str) -> list:
                 "description": r.description,
                 "language": r.language,
                 "languages": languages,
-                "topics": r.get_topics(),
+                "topics": topics,
                 "created_at": r.created_at.isoformat(),
                 "pushed_at": r.pushed_at.isoformat(),
                 "size_kb": r.size,
