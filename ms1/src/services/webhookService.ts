@@ -81,10 +81,11 @@ export const dispatchWebhook = async (transactionId: string, clientId: string, p
     } else {
       await handleWebhookFailure(delivery, response.status, JSON.stringify(response.data).substring(0, 500));
     }
-  } catch (error: any) {
-    logger.error('Webhook dispatch failed:', error.message);
-    const statusCode = error.response?.status || null;
-    const responseBody = error.response?.data ? JSON.stringify(error.response.data).substring(0, 500) : error.message;
-    await handleWebhookFailure(delivery, statusCode, responseBody);
-  }
+    } catch (error: unknown) {
+      const err = error as any;
+      logger.error('Webhook dispatch failed:', err.message);
+      const statusCode = err.response?.status || null;
+      const responseBody = err.response?.data ? JSON.stringify(err.response.data).substring(0, 500) : err.message;
+      await handleWebhookFailure(delivery, statusCode, responseBody);
+    }
 };

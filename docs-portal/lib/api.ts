@@ -1,12 +1,21 @@
 import axios from 'axios';
+import { getRefreshToken, setTokens, clearTokens } from './auth';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7002',
 });
 
-// Placeholder for refresh logic
 export const refreshAccessToken = async () => {
-  throw new Error('not_implemented');
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error('No refresh token available');
+  
+  const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7002'}/v1/auth/refresh`, {
+    refreshToken
+  });
+  
+  const { accessToken, refreshToken: newRefreshToken } = response.data;
+  setTokens(accessToken, newRefreshToken);
+  return accessToken;
 };
 
 api.interceptors.request.use(
@@ -25,7 +34,23 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Will handle 401 refresh in Prompt 10
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const newAccessToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        clearTokens();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
