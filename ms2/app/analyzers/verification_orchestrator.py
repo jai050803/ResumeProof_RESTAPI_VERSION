@@ -17,6 +17,7 @@ class AgentState(TypedDict):
     github_url: str
     resume_text: str
     jd_text: str
+    client_id: str
     
     # GitHub Data Node Outputs
     github_user_exists: bool
@@ -172,11 +173,12 @@ def score_calculation_node(state: AgentState) -> Dict[str, Any]:
 
 def build_final_result_node(state: AgentState) -> Dict[str, Any]:
     """
-    Node 4: Assemble graph outputs into the final database-ready structure.
+    Node 4: Assemble graph outputs, persist result to postgres, handoff to MS1, and update job status.
     """
     logger.info("Starting build_final_result_node...")
     
     transaction_id = state.get("transaction_id")
+    client_id = state.get("client_id")
     github_user_exists = state.get("github_user_exists", False)
     
     if not github_user_exists:
@@ -199,41 +201,65 @@ def build_final_result_node(state: AgentState) -> Dict[str, Any]:
             "missingSkills": [],
             "flags": state.get("flags", [])
         }
-        return {"final_result": final_result}
+    else:
+        github_user_data = state.get("github_user_data", {})
+        project_matches = state.get("project_matches", [])
+        ai_alignment = state.get("ai_alignment", {})
+        account_health = state.get("account_health", {})
         
-    github_user_data = state.get("github_user_data", {})
-    project_matches = state.get("project_matches", [])
-    ai_alignment = state.get("ai_alignment", {})
-    account_health = state.get("account_health", {})
+        verified_projects_count = sum(1 for m in project_matches if m.get("matched_repo") is not None)
+        
+        has_authorship = False
+        for r in state.get("authorship_results", []):
+            if r.get("is_author"):
+                has_authorship = True
+                break
+                
+        final_result = {
+            "transactionId": transaction_id,
+            "status": state.get("status", "flagged"),
+            "confidenceScore": state.get("confidence_score", 0),
+            "github": {
+                "username": github_user_data.get("username"),
+                "exists": True,
+                "reposFound": len(state.get("github_repos", [])),
+                "claimedProjects": len(project_matches),
+                "verifiedProjects": verified_projects_count,
+                "projectMatches": project_matches,
+                "commitAuthorship": has_authorship,
+                "accountHealth": account_health.get("health_score", 0)
+            },
+            "skillAlignment": ai_alignment.get("score", 0),
+            "matchedSkills": ai_alignment.get("matched_skills", []),
+            "missingSkills": ai_alignment.get("missing_skills", []),
+            "flags": state.get("flags", [])
+        }
     
-    verified_projects_count = sum(1 for m in project_matches if m.get("matched_repo") is not None)
-    
-    has_authorship = False
-    for r in state.get("authorship_results", []):
-        if r.get("is_author"):
-            has_authorship = True
-            break
-            
-    final_result = {
-        "transactionId": transaction_id,
-        "status": state.get("status", "flagged"),
-        "confidenceScore": state.get("confidence_score", 0),
-        "github": {
-            "username": github_user_data.get("username"),
-            "exists": True,
-            "reposFound": len(state.get("github_repos", [])),
-            "claimedProjects": len(project_matches),
-            "verifiedProjects": verified_projects_count,
-            "projectMatches": project_matches,
-            "commitAuthorship": has_authorship,
-            "accountHealth": account_health.get("health_score", 0)
-        },
-        "skillAlignment": ai_alignment.get("score", 0),
-        "matchedSkills": ai_alignment.get("matched_skills", []),
-        "missingSkills": ai_alignment.get("missing_skills", []),
-        "flags": state.get("flags", [])
-    }
-    
+    try:
+        from app.services import db_service
+        from app.services import webhook_dispatcher
+        
+        # 1. Write the verification result
+        db_service.write_verification_result(transaction_id, final_result)
+        
+        # 2. Update the transaction status to done / rejected / flagged
+        db_service.update_transaction_status(transaction_id, final_result["status"], completed=True)
+        
+        # 3. Call MS1 to trigger webhook dispatcher
+        webhook_dispatcher.dispatch_webhook_to_client(transaction_id, client_id, final_result)
+        
+        # 4. Update job record status to done
+        db_service.update_job_record(transaction_id, "done")
+    except Exception as e:
+        logger.error(f"Failed to persist result or handoff to MS1: {e}")
+        try:
+            from app.services import db_service
+            db_service.update_job_record(transaction_id, "failed", error_message=str(e))
+            db_service.update_transaction_status(transaction_id, "failed")
+        except Exception as db_err:
+            logger.error(f"Failed to write failure status to DB: {db_err}")
+        raise e
+        
     return {"final_result": final_result}
 
 
@@ -265,6 +291,7 @@ def run_full_verification(job_data: dict) -> dict:
         "github_url": job_data.get("githubUrl"),
         "resume_text": job_data.get("resumeText", ""),
         "jd_text": job_data.get("jdText", ""),
+        "client_id": job_data.get("clientId", ""),
         "github_user_exists": False,
         "github_user_data": {},
         "github_repos": [],
@@ -280,8 +307,19 @@ def run_full_verification(job_data: dict) -> dict:
     }
     
     try:
+        from app.services import db_service
+        # Mark job as active in the database
+        db_service.update_job_record(job_data.get("transactionId"), "active", active=True)
+        db_service.update_transaction_status(job_data.get("transactionId"), "processing")
+        
         final_state = compiled_graph.invoke(initial_state)
         return final_state.get("final_result", {})
     except Exception as e:
         logger.error(f"Unhandled graph execution error: {e}")
+        try:
+            from app.services import db_service
+            db_service.update_job_record(job_data.get("transactionId"), "failed", error_message=str(e))
+            db_service.update_transaction_status(job_data.get("transactionId"), "failed")
+        except Exception as db_err:
+            logger.error(f"Failed to record unhandled failure status: {db_err}")
         raise e
