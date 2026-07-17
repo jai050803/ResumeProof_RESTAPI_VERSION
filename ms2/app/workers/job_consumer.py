@@ -3,14 +3,25 @@ from bullmq import Worker, Job
 from app.config import settings
 from app.utils.logger import get_logger
 
+from app.analyzers.verification_orchestrator import run_full_verification
+
 logger = get_logger("job_consumer")
 
 async def process_single_job(job: Job, token: str):
     try:
         logger.info(f"Received job ID: {job.id}, Name: {job.name}")
         logger.info(f"Job payload data: {job.data}")
+        
+        # Run orchestrator
+        # Run it in an executor if it contains synchronous HTTP/API requests,
+        # but since LangGraph app.invoke is synchronous, we run it inside a thread pool to avoid blocking the event loop.
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, run_full_verification, job.data)
+        
+        logger.info(f"Verification completed for job {job.id}!")
+        logger.info(f"Result details: {result}")
     except Exception as e:
-        logger.error(f"Error logging job {job.id}: {e}")
+        logger.error(f"Error processing job {job.id}: {e}")
         raise e
 
 async def start_consumer():
