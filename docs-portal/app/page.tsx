@@ -104,9 +104,9 @@ export default function Home() {
                 </div>
                 <div className="p-4 overflow-x-auto">
                   <pre className="text-zinc-300">
-                    <code className="block"><span className="text-indigo-400">RESUMEPROOF_API_KEY</span>="rp_live_..."</code>
-                    <code className="block"><span className="text-indigo-400">RESUMEPROOF_API_URL</span>="https://api.resumeproof.online"</code>
-                    <code className="block"><span className="text-indigo-400">WEBHOOK_SECRET</span>="your_generated_webhook_secret"</code>
+                    <code className="block"><span className="text-indigo-400">RESUMEPROOF_API_KEY</span>=&quot;rp_live_...&quot;</code>
+                    <code className="block"><span className="text-indigo-400">RESUMEPROOF_API_URL</span>=&quot;https://api.resumeproof.online&quot;</code>
+                    <code className="block"><span className="text-indigo-400">WEBHOOK_SECRET</span>=&quot;your_generated_webhook_secret&quot;</code>
                   </pre>
                 </div>
               </div>
