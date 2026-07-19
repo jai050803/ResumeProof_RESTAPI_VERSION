@@ -18,7 +18,7 @@ export const submitApplication = async (data: CreateApplicationDto) => {
   try {
     const resumePath = path.join(__dirname, '../../uploads', data.resumeFilename);
     const form = new FormData();
-    form.append('resume', fs.createReadStream(resumePath));
+    form.append('resume', fs.createReadStream(resumePath), { filename: data.resumeFilename });
     form.append('githubUrl', data.githubUrl);
     form.append('jdText', job.requirements);
     form.append('candidateEmail', data.candidateEmail);
