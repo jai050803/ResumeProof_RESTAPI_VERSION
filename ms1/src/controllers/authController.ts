@@ -59,7 +59,6 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     }
     const { refreshToken } = parseResult.data;
     
-    // Lazy import to avoid circular dependencies if any
     const { rotateRefreshToken } = await import('../services/jwtService');
     const tokens = await rotateRefreshToken(refreshToken);
     
