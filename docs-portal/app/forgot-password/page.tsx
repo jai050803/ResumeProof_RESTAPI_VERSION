@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
             ✓
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">Check your inbox</h2>
-          <p className="text-zinc-400 mb-8">If your email is registered, we've sent you a password reset link.</p>
+          <p className="text-zinc-400 mb-8">If your email is registered, we&apos;ve sent you a password reset link.</p>
           <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
             Back to login
           </Link>
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6">
       <div className="bg-zinc-900/50 border border-zinc-800 p-10 rounded-2xl max-w-md w-full shadow-2xl">
         <h1 className="text-2xl font-bold text-white mb-2 text-center">Reset your password</h1>
-        <p className="text-zinc-400 text-sm text-center mb-8">Enter your email address and we'll send you a link to reset your password.</p>
+        <p className="text-zinc-400 text-sm text-center mb-8">Enter your email address and we&apos;ll send you a link to reset your password.</p>
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm mb-6">
