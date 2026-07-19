@@ -88,3 +88,37 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
     next(error);
   }
 };
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { forgotPasswordSchema } = await import('../schemas/authSchemas');
+    const parseResult = forgotPasswordSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new AppError(parseResult.error.issues.map((e: any) => e.message).join(', '), 400);
+    }
+    
+    const { email } = parseResult.data;
+    await clientService.requestPasswordReset(email);
+    
+    res.status(200).json({ message: 'If the email is registered, a reset link has been sent.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { resetPasswordSchema } = await import('../schemas/authSchemas');
+    const parseResult = resetPasswordSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new AppError(parseResult.error.issues.map((e: any) => e.message).join(', '), 400);
+    }
+    
+    const { token, newPassword } = parseResult.data;
+    await clientService.resetPassword(token, newPassword);
+    
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};

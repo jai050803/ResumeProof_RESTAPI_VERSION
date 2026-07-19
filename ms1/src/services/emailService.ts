@@ -50,3 +50,35 @@ export const sendEmailVerificationLink = async (to: string, rawToken: string) =>
     }
   }
 };
+
+export const sendPasswordResetEmail = async (to: string, rawToken: string) => {
+  try {
+    const link = `${env.DOCS_PORTAL_URL}/reset-password?token=${rawToken}`;
+    
+    if (env.NODE_ENV === 'development') {
+      logger.info(`[DEV] Password reset link for ${to}: ${link}`);
+    }
+
+    const mailOptions = {
+      from: env.SMTP_USER,
+      to,
+      subject: 'Reset your ResumeProof password',
+      html: `
+        <p>Hello,</p>
+        <p>You requested a password reset for your ResumeProof account. Click the link below to set a new password:</p>
+        <a href="${link}">${link}</a>
+        <p>This link expires in 1 hour.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    };
+
+    const mailer = getTransporter();
+    await mailer.sendMail(mailOptions);
+    logger.info(`Sent password reset email to ${to}`);
+  } catch (error) {
+    logger.error(`Failed to send password reset email to ${to}`, error);
+    if (env.NODE_ENV !== 'development') {
+      throw error;
+    }
+  }
+};

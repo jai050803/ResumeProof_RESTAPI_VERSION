@@ -28,6 +28,7 @@ model Client {
   webhookDeliveries  WebhookDelivery[]
   auditLogs          AuditLog[]
   emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
   sessions           Session[]
 
   @@map("clients")
@@ -44,6 +45,19 @@ model EmailVerification {
 
   @@index([clientId])
   @@map("email_verifications")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  clientId  String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("password_resets")
 }
 
 model Session {
@@ -175,3 +189,4 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
