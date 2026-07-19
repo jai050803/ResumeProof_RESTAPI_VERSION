@@ -23,7 +23,7 @@ export default function LoginPage() {
       setTokens(response.data.accessToken, response.data.refreshToken);
       router.push('/dashboard');
     } catch (err: unknown) {
-      const error = err as any;
+      const error = err as { response?: { status?: number } };
       if (error.response?.status === 401) {
         setError('Invalid email or password.');
       } else if (error.response?.status === 403) {
@@ -92,7 +92,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-8 text-center text-sm text-zinc-400">
-          Don't have an account? <Link href="/register" className="text-indigo-400 hover:text-indigo-300">Register</Link>
+          Don&apos;t have an account? <Link href="/register" className="text-indigo-400 hover:text-indigo-300">Register</Link>
         </p>
       </div>
     </main>

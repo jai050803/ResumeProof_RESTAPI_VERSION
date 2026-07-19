@@ -26,7 +26,8 @@ export function WebhookConfigPanel({ initialWebhookUrl }: { initialWebhookUrl?: 
       const res = await api.post('/v1/settings/webhook', { webhookUrl: url });
       setSecret(res.data.webhookSecret);
       setSuccess('Webhook configured successfully! Save your signing secret below.');
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       if (err.response?.data?.message === 'webhook_endpoint_unreachable') {
         setError("We couldn't reach that URL — check it's publicly accessible and returns a 2xx response.");
       } else {

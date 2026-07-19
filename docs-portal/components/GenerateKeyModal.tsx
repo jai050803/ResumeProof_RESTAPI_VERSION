@@ -22,9 +22,9 @@ export const GenerateKeyModal: React.FC<GenerateKeyModalProps> = ({ onClose, onS
 
     try {
       const res = await api.post('/v1/keys/generate', { label, environment });
-      setRawKey(res.data.rawKey);
+      setRawKey(res.data.apiKey);
       onSuccess(); // Trigger parent refresh so the masked key appears in the list
-    } catch (err: unknown) {
+    } catch {
       setError('Failed to generate key. Please try again.');
     } finally {
       setLoading(false);
@@ -119,7 +119,7 @@ export const GenerateKeyModal: React.FC<GenerateKeyModalProps> = ({ onClose, onS
                     <label className={`cursor-pointer border rounded-lg p-3 text-center transition ${environment === 'test' ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
                       <input type="radio" name="env" value="test" className="hidden" checked={environment === 'test'} onChange={() => setEnvironment('test')} />
                       <div className="font-semibold mb-1">Test</div>
-                      <div className="text-xs opacity-70">Doesn't consume quota</div>
+                      <div className="text-xs opacity-70">Doesn&apos;t consume quota</div>
                     </label>
                     <label className={`cursor-pointer border rounded-lg p-3 text-center transition ${environment === 'live' ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
                       <input type="radio" name="env" value="live" className="hidden" checked={environment === 'live'} onChange={() => setEnvironment('live')} />

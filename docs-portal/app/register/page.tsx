@@ -28,7 +28,7 @@ export default function RegisterPage() {
       await api.post('/v1/auth/register', { orgName, email, password });
       setSuccess(true);
     } catch (err: unknown) {
-      const error = err as any;
+      const error = err as { response?: { status?: number } };
       if (error.response?.status === 409) {
         setError('An account with this email is already registered.');
       } else {
@@ -47,7 +47,7 @@ export default function RegisterPage() {
             ✓
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">Check your inbox</h2>
-          <p className="text-zinc-400 mb-8">We've sent an email verification link to {email}. Please click the link to activate your account.</p>
+          <p className="text-zinc-400 mb-8">We&apos;ve sent an email verification link to {email}. Please click the link to activate your account.</p>
           <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
             Back to login
           </Link>

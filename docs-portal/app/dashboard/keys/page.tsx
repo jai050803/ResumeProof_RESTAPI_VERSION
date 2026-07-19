@@ -40,7 +40,7 @@ export default function KeysPage() {
       await api.delete(`/v1/keys/${id}`);
       // Refresh the list to reflect revocation
       fetchKeys();
-    } catch (err) {
+    } catch {
       alert('Failed to revoke key');
     }
   };
