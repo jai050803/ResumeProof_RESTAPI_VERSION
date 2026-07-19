@@ -28,9 +28,16 @@ export default function RegisterPage() {
       await api.post('/v1/auth/register', { orgName, email, password });
       setSuccess(true);
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number } };
-      if (error.response?.status === 409) {
+      const error = err as { response?: { status?: number; data?: { error?: string } } };
+      
+      if (error.response?.status === 429) {
+        setError('Too many requests. Please slow down.');
+      } else if (error.response?.data?.error === 'email_in_use') {
         setError('An account with this email is already registered.');
+      } else if (error.response?.status === 409) {
+        setError('An account with this email is already registered.');
+      } else if (error.response?.data?.error) {
+        setError(error.response.data.error);
       } else {
         setError('Registration failed. Please try again later.');
       }

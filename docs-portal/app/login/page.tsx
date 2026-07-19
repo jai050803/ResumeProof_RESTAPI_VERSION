@@ -23,11 +23,16 @@ export default function LoginPage() {
       setTokens(response.data.accessToken, response.data.refreshToken);
       router.push('/dashboard');
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number } };
-      if (error.response?.status === 401) {
+      const error = err as { response?: { status?: number; data?: { error?: string } } };
+      
+      if (error.response?.status === 429) {
+        setError('Too many requests. Please slow down.');
+      } else if (error.response?.status === 401 || error.response?.data?.error === 'invalid_credentials') {
         setError('Invalid email or password.');
-      } else if (error.response?.status === 403) {
+      } else if (error.response?.status === 403 || error.response?.data?.error === 'email_not_verified') {
         setError('Please verify your email address before logging in.');
+      } else if (error.response?.data?.error) {
+        setError(error.response.data.error);
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
