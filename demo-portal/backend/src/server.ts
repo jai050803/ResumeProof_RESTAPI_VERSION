@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
 import jobRoutes from './routes/jobRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 import { uploadMiddleware } from './middlewares/uploadMiddleware';
 import * as applyController from './controllers/applyController';
 import * as adminController from './controllers/adminController';
@@ -11,9 +12,14 @@ import { Request, Response, NextFunction } from 'express';
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    (req as any).rawBody = buf;
+  }
+}));
 
 app.use('/api/jobs', jobRoutes);
+app.use('/api/webhook', webhookRoutes);
 app.post('/api/apply', uploadMiddleware.single('resume'), applyController.apply);
 app.get('/api/apply/:applicationId/status', applyController.checkStatus);
 app.get('/api/admin/applications', adminController.getAllApplications);

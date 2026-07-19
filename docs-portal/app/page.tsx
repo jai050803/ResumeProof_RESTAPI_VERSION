@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ApiCodeBlock } from '@/components/ApiCodeBlock';
 
 export default function Home() {
@@ -6,17 +7,17 @@ export default function Home() {
     <main className="min-h-screen bg-zinc-950 text-zinc-300 selection:bg-indigo-500/30">
       {/* Navbar Placeholder */}
       <header className="border-b border-zinc-800/60 sticky top-0 bg-zinc-950/80 backdrop-blur-md z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-4 md:py-0 md:h-16 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
           <div className="text-xl font-bold text-white flex items-center space-x-2">
             <span className="text-indigo-500">Resume</span>
             <span>Proof</span>
           </div>
-          <div className="flex items-center space-x-6 text-sm">
+          <div className="flex flex-wrap justify-center items-center gap-4 md:space-x-6 text-sm">
             <a href="#how-it-works" className="hover:text-white transition">How it Works</a>
             <a href="#api" className="hover:text-white transition">API Reference</a>
-            <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition">
+            <Link href="/register" className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium transition">
               Dashboard
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -36,11 +37,11 @@ export default function Home() {
         <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 leading-relaxed">
           Verify technical claims by cross-referencing resumes against actual GitHub commit history, powered by deterministic analysis and intelligent skill matching.
         </p>
-        <div className="flex items-center space-x-4">
-          <button className="bg-white text-zinc-950 hover:bg-zinc-200 px-6 py-3 rounded-lg font-semibold transition">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:space-x-4">
+          <Link href="/register" className="bg-white text-zinc-950 hover:bg-zinc-200 px-6 py-3 rounded-lg font-semibold transition w-full sm:w-auto text-center">
             Start Verifying
-          </button>
-          <a href="#api" className="px-6 py-3 border border-zinc-700 hover:border-zinc-500 hover:text-white rounded-lg font-semibold transition">
+          </Link>
+          <a href="#api" className="px-6 py-3 border border-zinc-700 hover:border-zinc-500 hover:text-white rounded-lg font-semibold transition w-full sm:w-auto text-center">
             Read the Docs
           </a>
         </div>
@@ -88,6 +89,29 @@ export default function Home() {
           </div>
 
           <div className="space-y-24">
+            {/* Quick Setup */}
+            <div>
+              <div className="mb-8">
+                <div className="flex items-center space-x-3 mb-4">
+                  <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-bold font-mono">SETUP</span>
+                  <h3 className="text-xl font-semibold text-white">Environment Configuration</h3>
+                </div>
+                <p className="text-zinc-400 text-sm mb-4">After generating your keys from the dashboard, you must configure your backend environment variables to securely connect to ResumeProof and receive webhook events.</p>
+              </div>
+              <div className="bg-[#0d1117] border border-zinc-800 rounded-xl overflow-hidden font-mono text-sm">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-[#161b22]">
+                  <span className="text-zinc-400 text-xs font-medium uppercase tracking-wider">.env</span>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <pre className="text-zinc-300">
+                    <code className="block"><span className="text-indigo-400">RESUMEPROOF_API_KEY</span>="rp_live_..."</code>
+                    <code className="block"><span className="text-indigo-400">RESUMEPROOF_API_URL</span>="https://api.resumeproof.online"</code>
+                    <code className="block"><span className="text-indigo-400">WEBHOOK_SECRET</span>="your_generated_webhook_secret"</code>
+                  </pre>
+                </div>
+              </div>
+            </div>
+
             {/* Verify Endpoint */}
             <div>
               <div className="mb-8">

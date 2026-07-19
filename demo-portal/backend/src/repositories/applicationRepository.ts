@@ -63,3 +63,10 @@ export const findApplicationById = async (id: string) => {
   const res = await query('SELECT * FROM applications WHERE id = $1', [id]);
   return res.rows[0];
 };
+
+export const updateApplicationResultByTransactionId = async (transactionId: string, status: string, result: any) => {
+  await query(
+    'UPDATE applications SET status = $1, verification_result = $2 WHERE transaction_id = $3',
+    [status, JSON.stringify(result), transactionId]
+  );
+};

@@ -12,4 +12,5 @@ export const env = {
   DEMO_PORT: parseInt(process.env.DEMO_PORT || '7005', 10),
   RESUMEPROOF_API_KEY: required('RESUMEPROOF_API_KEY'),
   RESUMEPROOF_API_URL: required('RESUMEPROOF_API_URL'),
+  WEBHOOK_SECRET: required('WEBHOOK_SECRET'),
 };
