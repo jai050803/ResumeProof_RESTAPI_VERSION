@@ -13,6 +13,7 @@ const envSchema = z.object({
   SMTP_PORT: z.string().regex(/^\d+$/, "SMTP_PORT must be a valid number").transform(Number),
   SMTP_USER: z.string().min(1, "SMTP_USER is required"),
   SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
+  SMTP_FROM: z.string().email("SMTP_FROM must be a valid email").default('no-reply@resumeproof.online'),
   DOCS_PORTAL_URL: z.string().url("DOCS_PORTAL_URL must be a valid URL"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   JWT_ACCESS_TTL: z.string().default('1h'),

@@ -28,7 +28,7 @@ export const sendEmailVerificationLink = async (to: string, rawToken: string) =>
     }
 
     const mailOptions = {
-      from: env.SMTP_USER,
+      from: env.SMTP_FROM,
       to,
       subject: 'Verify your ResumeProof account',
       html: `
@@ -60,7 +60,7 @@ export const sendPasswordResetEmail = async (to: string, rawToken: string) => {
     }
 
     const mailOptions = {
-      from: env.SMTP_USER,
+      from: env.SMTP_FROM,
       to,
       subject: 'Reset your ResumeProof password',
       html: `
