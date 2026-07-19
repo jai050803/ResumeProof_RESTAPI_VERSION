@@ -15,14 +15,24 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await api.post('/v1/auth/forgot-password', { email });
+      console.log('Sending request to /v1/auth/forgot-password with email:', email);
+      const response = await api.post('/v1/auth/forgot-password', { email });
+      console.log('Response received:', response.status);
       setSuccess(true);
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number; data?: { error?: string } } };
+      console.error('Forgot password error:', err);
+      const error = err as { response?: { status?: number; data?: { error?: string } }, message?: string };
+      
       if (error.response?.status === 429) {
         setError('Too many requests. Please try again later.');
+      } else if (error.response?.status === 404) {
+        setError('Backend route not found (404). Please ensure the backend was built and restarted.');
       } else if (error.response?.data?.error) {
-        setError(error.response.data.error);
+        // Fallback for string-based errors that might come from Express AppError
+        const errorMsg = error.response.data.error;
+        setError(typeof errorMsg === 'string' ? errorMsg : 'An error occurred.');
+      } else if (error.message) {
+        setError(`Error: ${error.message}`);
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
