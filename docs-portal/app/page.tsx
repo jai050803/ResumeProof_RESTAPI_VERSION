@@ -32,7 +32,7 @@ export default function Home() {
           <span>v1.0 API is now live</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6 max-w-4xl">
-          Automated Resume<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Verification</span>
+          Automated Resume <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Verification</span>
         </h1>
         <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 leading-relaxed">
           Verify technical claims by cross-referencing resumes against actual GitHub commit history, powered by deterministic analysis and intelligent skill matching.
