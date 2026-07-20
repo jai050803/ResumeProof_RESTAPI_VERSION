@@ -15,23 +15,28 @@ function verifySignature(rawBody: string, signature: string, secret: string): bo
 }
 
 export async function POST(req: NextRequest) {
+  const rawBody = await req.text();
+  const signature = req.headers.get("x-rp-signature") ?? "";
+
+  let body: { event?: string; data?: Record<string, unknown> };
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Accept setup pings from ResumeProof so the dashboard can generate and display the secret
+  if (body.event === "test.ping") {
+    return NextResponse.json({ received: true, message: "Ping acknowledged" }, { status: 200 });
+  }
+
   const secret = process.env.WEBHOOK_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
 
-  const rawBody = await req.text();
-  const signature = req.headers.get("x-rp-signature") ?? "";
-
   if (!verifySignature(rawBody, signature, secret)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
-
-  let body: { event: string; data: Record<string, unknown> };
-  try {
-    body = JSON.parse(rawBody);
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   if (body.event === "verification.completed") {
