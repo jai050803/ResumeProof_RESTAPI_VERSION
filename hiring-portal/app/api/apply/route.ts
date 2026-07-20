@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   // Forward to ResumeProof API
   const rpFormData = new FormData();
   rpFormData.append("resume", resumeFile);
-  rpFormData.append("githubUsername", githubUsername);
+  rpFormData.append("githubUrl", `https://github.com/${githubUsername}`);
   if (linkedinUrl) rpFormData.append("linkedinUrl", linkedinUrl);
   if (appUrl) rpFormData.append("webhookUrl", `${appUrl}/api/webhook`);
 
