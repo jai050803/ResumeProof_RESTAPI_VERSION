@@ -6,7 +6,6 @@ from app.utils.logger import get_logger
 
 logger = get_logger("ai_analyzer")
 
-# Simple counter for manual test verification
 _groq_call_count = 0
 
 def get_groq_client():
@@ -22,96 +21,93 @@ def clean_json_response(text: str) -> str:
         return match_plain.group(1).strip()
     return text
 
-def extract_projects_with_ai(resume_text: str) -> list:
+def perform_ai_verification(resume_claims: dict, raw_github_data: dict) -> dict:
     """
-    Extracts candidate's claimed projects and tech stacks from resume text using Groq LLM.
+    Performs AI verification using Groq llama3-70b-8192 based on GitHub data and Resume claims.
+    Returns structured JSON object.
     """
     global _groq_call_count
     _groq_call_count += 1
     logger.info(f"Groq API Call Count: {_groq_call_count}")
 
     client = get_groq_client()
+    
+    # Extract needed info from raw_github_data
+    github_username = raw_github_data.get("username", "")
+    repos_found = raw_github_data.get("public_repos", 0)
+    account_age = raw_github_data.get("account_age_days", 0)
+    total_commits = raw_github_data.get("total_commits", 0)
+    pinned_repos = raw_github_data.get("pinned_repos", [])
+    
+    # Top 10 repos by stars/commits
+    original_repos = [r for r in raw_github_data.get("repos", []) if not r.get("is_fork")]
+    top_10 = sorted(original_repos, key=lambda x: x.get("stars", 0) + x.get("commit_count", 0), reverse=True)[:10]
+    top_10_formatted = []
+    for r in top_10:
+        top_10_formatted.append({
+            "name": r.get("name"),
+            "description": r.get("description"),
+            "languages": list(r.get("languages", {}).keys()),
+            "commit_count": r.get("commit_count")
+        })
+        
+    quality = raw_github_data.get("qualitySignals", {})
+    languages_by_depth = quality.get("languagesByDepth", [])
+    langs_formatted = [f"Lang: {l['language']} {l['totalBytes']/1024:.1f}k bytes across {l['repoCount']} repos" for l in languages_by_depth[:5]]
+    
     prompt = f"""
-You are an expert technical resume parser.
-Analyze the following resume text and extract all projects claimed by the candidate.
-For each project, identify the project name and the technologies/languages used in it.
+You are a technical resume verification engine. You receive a candidate's resume claims and their actual GitHub profile data. Your job is to determine how truthful and accurate the resume is.
 
-Resume Text:
-{resume_text}
+RESUME CLAIMS:
+{json.dumps(resumeClaims, indent=2) if resume_claims else "{}"}
 
-You MUST return ONLY a valid JSON array of objects. Do not include any explanation, markdown formatting (outside of json code blocks), or extra text.
-Format:
-[
-  {{"name": "Project Name", "technologies": ["Tech1", "Tech2"]}}
-]
-"""
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a precise JSON extractor that only outputs raw JSON arrays."},
-                {"role": "user", "content": prompt}
-            ],
-            model="llama3-70b-8192",
-            temperature=0.0
-        )
-        response_text = chat_completion.choices[0].message.content
-        cleaned = clean_json_response(response_text)
-        return json.loads(cleaned)
-    except Exception as e:
-        logger.error(f"Error extracting projects with AI: {e}")
-        return []
+GITHUB DATA:
+- Username: {github_username}
+- Public repos: {repos_found}, Account age: {account_age} days
+- Top repos: {json.dumps(top_10_formatted, indent=2)}
+- Pinned repos: {json.dumps(pinned_repos, indent=2)}
+- Total commits: {total_commits}
 
-def analyze_skill_alignment(resume_text: str, jd_text: str, matched_skills: list) -> dict:
-    """
-    Analyzes alignment between candidate's resume, matched GitHub skills, and the Job Description.
-    """
-    global _groq_call_count
-    _groq_call_count += 1
-    logger.info(f"Groq API Call Count: {_groq_call_count}")
+GITHUB QUALITY SIGNALS:
+- Account age: {account_age} days
+- Contribution pattern: {quality.get("contributionPattern", "unknown")} ({quality.get("consistentWeeksLast6Months", 0)} active weeks in last 6 months)
+- Last commit: {quality.get("lastCommitDaysAgo", 9999)} days ago
+- Original repos: {quality.get("originalCount", 0)} / Forks: {quality.get("forkCount", 0)} (fork ratio: {quality.get("forkRatio", 0.0)})
+- Primary language by code volume: {quality.get("primaryLanguage", "none")}
+- Language depth: {', '.join(langs_formatted)}
+- README coverage: {quality.get("readmeCoverage", 0.0)*100}% of original repos have substantive READMEs
+- Account authenticity score: {quality.get("accountAuthenticityScore", 0)}/100
 
-    if not jd_text or len(jd_text.strip()) < 50:
-        return {
-            "score": 0,
-            "matched_skills": matched_skills,
-            "missing_skills": [],
-            "experience_level": "unknown",
-            "summary": "No job description provided for alignment analysis."
-        }
+This gives you enough signal to reason about whether the GitHub profile looks like a real developer vs a resume-padding account.
 
-    client = get_groq_client()
-    prompt = f"""
-You are an expert technical recruiter and resume analyzer.
-Analyze the candidate's resume against the target Job Description (JD).
-Also, consider these technical skills that were already matched from their GitHub profile: {matched_skills}
-
-Resume Text:
-{resume_text}
-
-Job Description:
-{jd_text}
-
-Compare the skills demanded in the JD with the skills present in the resume and matched GitHub skills.
-Determine:
-1. Alignment Score (0 to 100).
-2. List of matched skills.
-3. List of missing skills (skills requested in JD but not present/demonstrated).
-4. Estimated experience level (e.g. Junior, Mid, Senior).
-5. A concise 2-sentence summary of the candidate's alignment.
-
-You MUST return ONLY a valid JSON object. Do not include any explanations, markdown formatting (outside of json code blocks), or extra text.
-Format:
+Return ONLY a JSON object with this exact shape:
 {{
-  "score": 85,
-  "matched_skills": ["Python", "Docker"],
-  "missing_skills": ["AWS"],
-  "experience_level": "Mid",
-  "summary": "..."
+  "projectMatches": [
+    {{
+      "claimedProject": "string",
+      "matchedRepo": "string or null",
+      "matchConfidence": number (0-100),
+      "commitsByCandidate": number,
+      "techOverlap": ["string"],
+      "verdict": "verified" | "partial" | "not_found"
+    }}
+  ],
+  "skillVerification": {{
+    "verifiedSkills": ["string"],
+    "unverifiedSkills": ["string"],
+    "missingFromGithub": ["string"]
+  }},
+  "redFlags": ["string"],
+  "overallVerdict": "authentic" | "mostly_authentic" | "suspicious" | "fabricated",
+  "summary": "string (2-3 sentences, professional tone)"
 }}
+
+Do not output anything else.
 """
     try:
         chat_completion = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are a precise recruiter assistant that only outputs raw JSON objects."},
+                {"role": "system", "content": "You are a precise JSON extractor that only outputs raw JSON objects."},
                 {"role": "user", "content": prompt}
             ],
             model="llama3-70b-8192",
@@ -121,12 +117,16 @@ Format:
         cleaned = clean_json_response(response_text)
         return json.loads(cleaned)
     except Exception as e:
-        logger.error(f"Error analyzing skill alignment with AI: {e}")
+        logger.error(f"Error analyzing profile with AI: {e}")
         return {
-            "score": 0,
-            "matched_skills": matched_skills,
-            "missing_skills": [],
-            "experience_level": "unknown",
+            "projectMatches": [],
+            "skillVerification": {
+                "verifiedSkills": [],
+                "unverifiedSkills": [],
+                "missingFromGithub": []
+            },
+            "redFlags": ["AI_ANALYSIS_FAILED"],
+            "overallVerdict": "suspicious",
             "summary": "AI alignment analysis failed due to an error."
         }
 

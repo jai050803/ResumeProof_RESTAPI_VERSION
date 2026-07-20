@@ -1,157 +1,111 @@
-def determine_verification_status(score: int) -> str:
-    """
-    Determines verification status based on the confidence score:
-    - score >= 70: verified
-    - score 40-69: flagged
-    - score < 40: rejected
-    """
-    if score >= 70:
-        return "verified"
-    elif score >= 40:
-        return "flagged"
-    else:
-        return "rejected"
+from app.utils.logger import get_logger
 
-def assemble_flags(project_matches: list, authorship_results: list, skill_alignment: dict, account_health: dict) -> list:
-    """
-    Assembles warning and observation flags from all verification stages.
-    """
-    flags = []
-    
-    # 1. Flags from Account Health
-    health_flags = account_health.get("flags", [])
-    for hf in health_flags:
-        if hf == "account_too_new":
-            flags.append({
-                "type": "warning",
-                "message": "GitHub account is extremely new (under 60 days old).",
-                "severity": "high"
-            })
-        elif hf == "account_relatively_new":
-            flags.append({
-                "type": "observation",
-                "message": "GitHub account is relatively new (under 180 days old).",
-                "severity": "medium"
-            })
-        elif hf == "no_public_repos":
-            flags.append({
-                "type": "warning",
-                "message": "GitHub profile has zero public repositories.",
-                "severity": "high"
-            })
-            
-    # 2. Flags from Project Matcher
-    for pm in project_matches:
-        if pm.get("matched_repo") is None:
-            flags.append({
-                "type": "warning",
-                "message": f"Could not find matching GitHub repository for claimed project '{pm.get('claimed_project')}'.",
-                "severity": "medium"
-            })
-            
-    # 3. Flags from Commit Analyzer
-    for r in authorship_results:
-        repo_name = r.get("repo_name")
-        suspicious = r.get("suspicious_patterns", [])
-        if not r.get("is_author") and repo_name:
-            flags.append({
-                "type": "warning",
-                "message": f"Candidate is not the author of any commits in matched repository '{repo_name}'.",
-                "severity": "high"
-            })
-        for pattern in suspicious:
-            if pattern == "all_commits_single_day":
-                flags.append({
-                    "type": "warning",
-                    "message": f"Suspicious commit history in '{repo_name}': all commits were pushed on a single day.",
-                    "severity": "high"
-                })
-            elif pattern == "compressed_burst":
-                flags.append({
-                    "type": "warning",
-                    "message": f"Suspicious commit history in '{repo_name}': commit frequency shows a scripted compressed burst (10+ commits in <3 days).",
-                    "severity": "medium"
-                })
-            elif pattern == "single_clock_hour":
-                flags.append({
-                    "type": "observation",
-                    "message": f"Suspicious commit history in '{repo_name}': all commits occurred within the same clock hour of the day.",
-                    "severity": "medium"
-                })
-            elif pattern == "perfectly_uniform_spacing":
-                flags.append({
-                    "type": "warning",
-                    "message": f"Suspicious commit history in '{repo_name}': commits have perfectly uniform spacing, suggesting automation.",
-                    "severity": "high"
-                })
-                
-    # 4. Flags from AI alignment
-    missing = skill_alignment.get("missing_skills", [])
-    if missing:
-        flags.append({
-            "type": "observation",
-            "message": f"Missing key skills requested in JD: {', '.join(missing)}.",
-            "severity": "low"
-        })
-        
-    return flags
+logger = get_logger("score_calculator")
 
-def compute_confidence_score(github_result: dict, project_matches: list, authorship_results: list, skill_alignment: dict, account_health: dict) -> dict:
+def compute_confidence_score(
+    raw_github_data: dict,
+    resume_claims: dict,
+    ai_analysis: dict,
+    existing_flags: list
+) -> dict:
     """
-    Computes a final integer score (0-100) using a weighted formula:
-    - 40% Project Existence & Match Quality
-    - 30% Commit Authorship (without suspicious patterns)
-    - 20% Skill-JD Alignment (scaled proportionally if JD is missing)
-    - 10% Account Health
+    Computes final confidence score, status, and flags based on the deterministic rules.
     """
-    # 1. Project matches points (Max 40)
-    claimed_count = len(project_matches)
-    verified_count = sum(1 for m in project_matches if m.get("matched_repo") is not None)
+    logger.info("Computing deterministic confidence score...")
     
-    if claimed_count > 0:
-        match_scores = [m.get("score", 0.0) for m in project_matches if m.get("matched_repo") is not None]
-        avg_match_score = sum(match_scores) / len(match_scores) if match_scores else 0.0
-        project_points = 40.0 * (verified_count / claimed_count) * avg_match_score
+    base_score = 0
+    flags = list(existing_flags)
+    
+    repos_found = raw_github_data.get("public_repos", 0)
+    total_commits = raw_github_data.get("total_commits", 0)
+    account_age_days = raw_github_data.get("account_age_days", 0)
+    quality = raw_github_data.get("qualitySignals", {})
+    
+    # 1. GitHub account legitimacy (20 pts)
+    if repos_found >= 5: base_score += 5
+    if repos_found >= 15: base_score += 5
+    if total_commits >= 100: base_score += 5
+    if account_age_days >= 180: base_score += 5
+        
+    # Variables extracted from AI output
+    claimed_projects_list = resume_claims.get("claimed_projects", [])
+    claimed_projects_count = len(claimed_projects_list)
+    project_matches = ai_analysis.get("projectMatches", [])
+    
+    verified_projects_count = sum(1 for p in project_matches if p.get("verdict") == "verified")
+    
+    commit_authorship = any(p.get("commitsByCandidate", 0) > 0 for p in project_matches)
+    
+    # 2. Project verification (35 pts)
+    if claimed_projects_count > 0:
+        verification_rate = verified_projects_count / claimed_projects_count
+        base_score += int(verification_rate * 35)
     else:
-        project_points = 40.0
+        # No projects claimed — neutral
+        base_score += 15
         
-    # 2. Commit authorship points (Max 30)
-    has_authorship = any(r.get("is_author", False) for r in authorship_results)
-    commit_points = 0.0
-    if has_authorship:
-        commit_points = 30.0
-        # Gather all suspicious pattern types detected
-        all_patterns = []
-        for r in authorship_results:
-            all_patterns.extend(r.get("suspicious_patterns", []))
-        unique_patterns = set(all_patterns)
+    # 3. Commit authorship (15 pts)
+    if commit_authorship:
+        base_score += 15
         
-        # Deduct 10 points per suspicious pattern type
-        deductions = len(unique_patterns) * 10.0
-        commit_points = max(0.0, commit_points - deductions)
-        
-    # 3. Account health points (Max 10)
-    health_points = 10.0 * (account_health.get("health_score", 100) / 100.0)
+    # 4. Skill alignment (20 pts)
+    claimed_skills = set(resume_claims.get("claimed_skills", []))
+    github_langs = set(raw_github_data.get("all_languages", {}).keys())
     
-    # 4. Skill-JD Alignment points (Max 20)
-    has_jd = skill_alignment.get("score") is not None and "skipped" not in skill_alignment.get("summary", "").lower()
-    
-    if has_jd:
-        alignment_points = 20.0 * (skill_alignment.get("score", 0) / 100.0)
-        total_score = project_points + commit_points + health_points + alignment_points
-    else:
-        # Scale score up proportionally to fit 100 points
-        raw_sum = project_points + commit_points + health_points
-        total_score = raw_sum * (100.0 / 80.0)
+    skill_alignment = 0
+    if claimed_skills:
+        overlap_count = len([s for s in claimed_skills if any(l.lower() == s.lower() for l in github_langs)])
+        overlap = overlap_count / len(claimed_skills)
+        skill_alignment = int(overlap * 100)
+        base_score += int(overlap * 20)
         
-    final_score = int(round(total_score))
-    final_score = max(0, min(100, final_score))
+    # 5. GitHub quality bonus (10 pts)
+    quality_bonus = 0
+    if quality.get("accountAuthenticityScore", 0) >= 70: quality_bonus += 5
+    if quality.get("contributionPattern") == "consistent": quality_bonus += 3
+    if quality.get("readmeCoverage", 0.0) >= 0.5: quality_bonus += 2
+    base_score += quality_bonus
     
-    status = determine_verification_status(final_score)
-    flags = assemble_flags(project_matches, authorship_results, skill_alignment, account_health)
+    confidence_score = min(base_score, 100)
+    
+    # Status
+    if confidence_score >= 75: status = "verified"
+    elif confidence_score >= 50: status = "flagged"
+    else: status = "rejected"
+    
+    # Auto-flags
+    if verified_projects_count == 0 and claimed_projects_count > 0:
+        flags.append("NO_PROJECTS_VERIFIED")
+    if not commit_authorship and claimed_projects_count > 0:
+        flags.append("NO_COMMIT_AUTHORSHIP")
+    if claimed_skills and skill_alignment < 30:
+        flags.append("LOW_SKILL_ALIGNMENT")
+    if repos_found < 3:
+        flags.append("SPARSE_GITHUB_PROFILE")
+    if ai_analysis.get("overallVerdict") in ["suspicious", "fabricated"]:
+        flags.append("AI_FLAGGED_SUSPICIOUS")
+        
+    if quality.get("forkRatio", 0.0) > 0.8 and repos_found > 5:
+        flags.append("HIGH_FORK_RATIO")
+    if quality.get("lastCommitDaysAgo", 0) > 365:
+        flags.append("INACTIVE_PROFILE")
+    if quality.get("accountAuthenticityScore", 100) < 30:
+        flags.append("SUSPICIOUS_ACCOUNT_PATTERN")
+        
+    # Add any redFlags from aiAnalysis as-is
+    ai_flags = ai_analysis.get("redFlags", [])
+    if isinstance(ai_flags, list):
+        flags.extend(ai_flags)
+        
+    # Remove duplicates
+    flags = list(dict.fromkeys(flags))
     
     return {
-        "confidence_score": final_score,
+        "confidence_score": confidence_score,
         "status": status,
-        "flags": flags
+        "flags": flags,
+        "claimed_projects_count": claimed_projects_count,
+        "verified_projects_count": verified_projects_count,
+        "commit_authorship": commit_authorship,
+        "skill_alignment": skill_alignment
     }

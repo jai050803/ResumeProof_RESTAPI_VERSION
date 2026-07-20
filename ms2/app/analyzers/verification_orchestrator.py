@@ -1,290 +1,227 @@
-from typing import TypedDict, List, Dict, Any
+from typing import TypedDict, List, Dict, Any, Optional
+import httpx
 from langgraph.graph import StateGraph, END
+from app.config import settings
 
-from app.analyzers import github_analyzer
-from app.analyzers import project_matcher
-from app.analyzers import commit_analyzer
-from app.analyzers import ai_analyzer
-from app.analyzers import score_calculator
+from app.analyzers.resume_extractor import extract_resume_claims_node
+from app.analyzers.github_analyzer import fetch_raw_github_data, verify_github_user_exists
+from app.analyzers.github_quality import analyze_github_quality_node
+from app.analyzers.ai_analyzer import perform_ai_verification
+from app.analyzers.score_calculator import compute_confidence_score
 from app.utils.logger import get_logger
 
 logger = get_logger("verification_orchestrator")
 
-# Define the State representing the graph context
 class AgentState(TypedDict):
-    # Inputs
     transaction_id: str
     github_url: str
     resume_text: str
     jd_text: str
     client_id: str
     
-    # GitHub Data Node Outputs
+    resume_claims: Dict[str, Any]
     github_user_exists: bool
-    github_user_data: Dict[str, Any]
-    github_repos: List[Dict[str, Any]]
-    claimed_projects: List[Dict[str, Any]]
-    project_matches: List[Dict[str, Any]]
-    authorship_results: List[Dict[str, Any]]
-    account_health: Dict[str, Any]
+    rawGithubData: Dict[str, Any]
+    aiAnalysis: Dict[str, Any]
     
-    # AI Analysis Node Outputs
-    ai_alignment: Dict[str, Any]
+    claimed_projects_count: int
+    verified_projects_count: int
+    commit_authorship: bool
+    skill_alignment: int
     
-    # Score Calculation Node Outputs
     confidence_score: int
     status: str
-    flags: List[Dict[str, Any]]
+    flags: List[str]
+    error: Optional[str]
     
-    # Final Result Assembled
     final_result: Dict[str, Any]
 
 
-def fetch_github_data_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Node 1: Extract username, check if exists, fetch repos, parse projects, match, and check authorship.
-    """
-    github_url = state.get("github_url", "")
-    resume_text = state.get("resume_text", "")
-    
-    logger.info(f"Starting fetch_github_data_node for URL: {github_url}")
-    
-    # Clean username from URL
+def node_extract_resume(state: AgentState) -> Dict[str, Any]:
     try:
-        username = github_url.rstrip("/").split("/")[-1]
-    except Exception:
-        logger.error(f"Failed to parse username from URL: {github_url}")
-        return {"github_user_exists": False}
-        
-    # Check user existence
-    user_details = github_analyzer.verify_github_user_exists(username)
-    if not user_details.get("exists"):
-        logger.warn(f"GitHub user {username} does not exist.")
-        return {
-            "github_user_exists": False,
-            "github_user_data": {},
-            "github_repos": [],
-            "claimed_projects": [],
-            "project_matches": [],
-            "authorship_results": [],
-            "account_health": {"health_score": 0, "flags": ["github_user_not_found"]}
-        }
-        
-    # User exists, proceed to load data
-    logger.info(f"User {username} exists. Fetching repos...")
-    repos = github_analyzer.fetch_public_repos(username)
-    
-    # Fetch account-level health metrics
-    account_health = github_analyzer.analyze_account_health(username)
-    
-    # Extract claimed projects from resume using AI (called inside this node to match)
-    logger.info("Extracting claimed projects from resume text...")
-    claimed_projects = ai_analyzer.extract_projects_with_ai(resume_text)
-    
-    # Perform fuzzy project matching
-    logger.info("Matching claimed projects to public repositories...")
-    project_matches = project_matcher.match_projects_to_repos(claimed_projects, repos)
-    
-    # Perform commit authorship analysis for matched repos
-    logger.info("Performing commit authorship checks...")
-    authorship_results = []
-    for match in project_matches:
-        repo_name = match.get("matched_repo")
-        if repo_name:
-            # Reconstruct full repo name (owner/repo_name)
-            repo_full_name = f"{username}/{repo_name}"
-            auth_res = commit_analyzer.check_commit_authorship(repo_full_name, username)
-            authorship_results.append({
-                "repo_name": repo_name,
-                **auth_res
-            })
-            
-    return {
-        "github_user_exists": True,
-        "github_user_data": user_details,
-        "github_repos": repos,
-        "claimed_projects": claimed_projects,
-        "project_matches": project_matches,
-        "authorship_results": authorship_results,
-        "account_health": account_health
-    }
-
-
-def ai_analysis_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Node 2: Evaluate skill alignment using Groq AI analyzer.
-    """
-    if not state.get("github_user_exists"):
-        logger.info("Skipping ai_analysis_node because GitHub user does not exist.")
-        return {"ai_alignment": {}}
-        
-    resume_text = state.get("resume_text", "")
-    jd_text = state.get("jd_text", "")
-    repos = state.get("github_repos", [])
-    
-    # Get all unique languages/topics from their repositories as initial matched skills
-    matched_skills = []
-    for r in repos:
-        if r.get("language"):
-            matched_skills.append(r["language"])
-        matched_skills.extend(r.get("languages", []))
-        matched_skills.extend(r.get("topics", []))
-    matched_skills = list(set([s for s in matched_skills if s]))
-    
-    logger.info("Starting ai_analysis_node for skill alignment...")
-    ai_alignment = ai_analyzer.analyze_skill_alignment(resume_text, jd_text, matched_skills)
-    
-    return {"ai_alignment": ai_alignment}
-
-
-def score_calculation_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Node 3: Compute final confidence score and compile warning flags.
-    """
-    if not state.get("github_user_exists"):
-        logger.info("Computing zero score in score_calculation_node (User does not exist).")
-        return {
-            "confidence_score": 0,
-            "status": "rejected",
-            "flags": [
-                {
-                    "type": "error",
-                    "message": "GitHub username not found.",
-                    "severity": "high"
-                }
-            ]
-        }
-        
-    logger.info("Starting score_calculation_node...")
-    score_res = score_calculator.compute_confidence_score(
-        github_result=state.get("github_user_data", {}),
-        project_matches=state.get("project_matches", []),
-        authorship_results=state.get("authorship_results", []),
-        skill_alignment=state.get("ai_alignment", {}),
-        account_health=state.get("account_health", {})
-    )
-    
-    return {
-        "confidence_score": score_res.get("confidence_score", 0),
-        "status": score_res.get("status", "flagged"),
-        "flags": score_res.get("flags", [])
-    }
-
-
-def build_final_result_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Node 4: Assemble graph outputs, persist result to postgres, handoff to MS1, and update job status.
-    """
-    logger.info("Starting build_final_result_node...")
-    
-    transaction_id = state.get("transaction_id")
-    client_id = state.get("client_id")
-    github_user_exists = state.get("github_user_exists", False)
-    
-    if not github_user_exists:
-        github_url_str = state.get("github_url") or ""
-        final_result = {
-            "transactionId": transaction_id,
-            "status": "rejected",
-            "confidenceScore": 0,
-            "github": {
-                "username": github_url_str.rstrip("/").split("/")[-1] if github_url_str else "",
-                "exists": False,
-                "reposFound": 0,
-                "claimedProjects": 0,
-                "verifiedProjects": 0,
-                "projectMatches": [],
-                "commitAuthorship": False,
-                "accountHealth": 0
-            },
-            "skillAlignment": 0,
-            "matchedSkills": [],
-            "missingSkills": [],
-            "flags": state.get("flags", [])
-        }
-    else:
-        github_user_data = state.get("github_user_data", {})
-        project_matches = state.get("project_matches", [])
-        ai_alignment = state.get("ai_alignment", {})
-        account_health = state.get("account_health", {})
-        
-        verified_projects_count = sum(1 for m in project_matches if m.get("matched_repo") is not None)
-        
-        has_authorship = False
-        for r in state.get("authorship_results", []):
-            if r.get("is_author"):
-                has_authorship = True
-                break
-                
-        final_result = {
-            "transactionId": transaction_id,
-            "status": state.get("status", "flagged"),
-            "confidenceScore": state.get("confidence_score", 0),
-            "github": {
-                "username": github_user_data.get("username"),
-                "exists": True,
-                "reposFound": len(state.get("github_repos", [])),
-                "claimedProjects": len(project_matches),
-                "verifiedProjects": verified_projects_count,
-                "projectMatches": project_matches,
-                "commitAuthorship": has_authorship,
-                "accountHealth": account_health.get("health_score", 0)
-            },
-            "skillAlignment": ai_alignment.get("score", 0),
-            "matchedSkills": ai_alignment.get("matched_skills", []),
-            "missingSkills": ai_alignment.get("missing_skills", []),
-            "flags": state.get("flags", [])
-        }
-    
-    try:
-        from app.services import db_service
-        from app.services import webhook_dispatcher
-        
-        # 1. Write the verification result
-        db_service.write_verification_result(transaction_id, final_result)
-        
-        # 2. Update the transaction status to done / rejected / flagged
-        db_service.update_transaction_status(transaction_id, final_result["status"], completed=True)
-        
-        # 3. Call MS1 to trigger webhook dispatcher
-        webhook_dispatcher.dispatch_webhook_to_client(transaction_id, client_id, final_result)
-        
-        # 4. Update job record status to done
-        db_service.update_job_record(transaction_id, "done")
+        res = extract_resume_claims_node(state)
+        return res
     except Exception as e:
-        logger.error(f"Failed to persist result or handoff to MS1: {e}")
-        try:
-            from app.services import db_service
-            db_service.update_job_record(transaction_id, "failed", error_message=str(e))
-            db_service.update_transaction_status(transaction_id, "failed")
-        except Exception as db_err:
-            logger.error(f"Failed to write failure status to DB: {db_err}")
-        raise e
+        logger.error(f"Error in extract_resume: {e}")
+        return {"error": str(e)}
+
+def node_fetch_github(state: AgentState) -> Dict[str, Any]:
+    try:
+        github_url = state.get("github_url", "")
+        username = github_url.rstrip("/").split("/")[-1]
         
-    return {"final_result": final_result}
+        user_check = verify_github_user_exists(username)
+        if not user_check.get("exists"):
+            logger.warn(f"GitHub user {username} does not exist.")
+            flags = state.get("flags", [])
+            flags.append("github_user_not_found")
+            return {
+                "github_user_exists": False,
+                "rawGithubData": {},
+                "flags": flags
+            }
+            
+        raw_data = fetch_raw_github_data(username)
+        return {
+            "github_user_exists": True,
+            "rawGithubData": raw_data
+        }
+    except Exception as e:
+        logger.error(f"Error in fetch_github: {e}")
+        return {"error": str(e)}
 
+def node_analyze_quality(state: AgentState) -> Dict[str, Any]:
+    try:
+        if not state.get("github_user_exists"):
+            return {}
+        return analyze_github_quality_node(state)
+    except Exception as e:
+        logger.error(f"Error in analyze_quality: {e}")
+        return {"error": str(e)}
 
-# Build and compile the LangGraph StateGraph workflow
+def node_ai_analysis(state: AgentState) -> Dict[str, Any]:
+    try:
+        if not state.get("github_user_exists"):
+            return {"aiAnalysis": {}}
+        ai_res = perform_ai_verification(state.get("resume_claims", {}), state.get("rawGithubData", {}))
+        return {"aiAnalysis": ai_res}
+    except Exception as e:
+        logger.error(f"Error in ai_analysis: {e}")
+        return {"error": str(e)}
+
+def node_score_calculation(state: AgentState) -> Dict[str, Any]:
+    try:
+        if not state.get("github_user_exists"):
+            return {
+                "confidence_score": 0,
+                "status": "rejected"
+            }
+        score_res = compute_confidence_score(
+            state.get("rawGithubData", {}),
+            state.get("resume_claims", {}),
+            state.get("aiAnalysis", {}),
+            state.get("flags", [])
+        )
+        return score_res
+    except Exception as e:
+        logger.error(f"Error in score_calculation: {e}")
+        return {"error": str(e)}
+
+def node_build_final(state: AgentState) -> Dict[str, Any]:
+    logger.info("Starting build_final_result node...")
+    try:
+        transaction_id = state.get("transaction_id")
+        github_url_str = state.get("github_url") or ""
+        username = github_url_str.rstrip("/").split("/")[-1]
+        
+        raw_github = state.get("rawGithubData", {})
+        ai_analysis = state.get("aiAnalysis", {})
+        
+        matched_skills = []
+        missing_skills = []
+        if ai_analysis and "skillVerification" in ai_analysis:
+            matched_skills = ai_analysis["skillVerification"].get("verifiedSkills", [])
+            missing_skills = ai_analysis["skillVerification"].get("missingFromGithub", [])
+            
+        payload = {
+            "transactionId": transaction_id,
+            "confidenceScore": state.get("confidence_score", 0),
+            "status": state.get("status", "flagged"),
+            "githubUsername": username,
+            "reposFound": raw_github.get("public_repos", 0),
+            "claimedProjects": state.get("claimed_projects_count", 0),
+            "verifiedProjects": state.get("verified_projects_count", 0),
+            "commitAuthorship": state.get("commit_authorship", False),
+            "skillAlignment": state.get("skill_alignment", 0),
+            "matchedSkills": matched_skills,
+            "missingSkills": missing_skills,
+            "flags": state.get("flags", []),
+            "rawGithubData": raw_github if raw_github else None,
+            "aiAnalysis": ai_analysis if ai_analysis else None
+        }
+        
+        # Write to DB locally first
+        from app.services import db_service
+        db_service.write_verification_result(transaction_id, payload)
+        db_service.update_transaction_status(transaction_id, payload["status"], completed=True)
+        db_service.update_job_record(transaction_id, "done")
+        
+        # Handoff to MS1
+        url = f"{settings.ms1_internal_url}/internal/result"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Internal-Secret": settings.internal_secret
+        }
+        
+        logger.info(f"POSTing final result to MS1 at {url}")
+        resp = httpx.post(url, json=payload, headers=headers, timeout=10.0)
+        if resp.status_code not in (200, 201, 202, 204):
+            logger.error(f"MS1 rejected result with status {resp.status_code}: {resp.text}")
+            # Spec: "If non-2xx, log error and still mark job complete"
+            
+        return {"final_result": payload}
+    except Exception as e:
+        logger.error(f"Error in build_final: {e}")
+        return {"error": str(e)}
+
+def node_terminal_error(state: AgentState) -> Dict[str, Any]:
+    """Terminal error node called when any previous node throws an exception"""
+    logger.error(f"Terminal error node invoked. Error: {state.get('error')}")
+    transaction_id = state.get("transaction_id")
+    
+    payload = {
+        "transactionId": transaction_id,
+        "confidenceScore": 0,
+        "status": "error",
+        "flags": ["PIPELINE_ERROR"]
+    }
+    
+    try:
+        url = f"{settings.ms1_internal_url}/internal/result"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Internal-Secret": settings.internal_secret
+        }
+        httpx.post(url, json=payload, headers=headers, timeout=10.0)
+        
+        from app.services import db_service
+        db_service.update_transaction_status(transaction_id, "failed")
+        db_service.update_job_record(transaction_id, "failed", error_message=state.get("error"))
+    except Exception as fallback_e:
+        logger.error(f"Failed to process terminal error fallback: {fallback_e}")
+        
+    return {"final_result": payload}
+
+# Build graph
 workflow = StateGraph(AgentState)
 
-workflow.add_node("fetch_github_data", fetch_github_data_node)
-workflow.add_node("ai_analysis", ai_analysis_node)
-workflow.add_node("score_calculation", score_calculation_node)
-workflow.add_node("build_final_result", build_final_result_node)
+workflow.add_node("extract_resume_claims", node_extract_resume)
+workflow.add_node("fetch_github_data", node_fetch_github)
+workflow.add_node("analyze_github_quality", node_analyze_quality)
+workflow.add_node("ai_analysis", node_ai_analysis)
+workflow.add_node("score_calculation", node_score_calculation)
+workflow.add_node("build_final_result", node_build_final)
+workflow.add_node("terminal_error", node_terminal_error)
 
-workflow.set_entry_point("fetch_github_data")
-workflow.add_edge("fetch_github_data", "ai_analysis")
-workflow.add_edge("ai_analysis", "score_calculation")
-workflow.add_edge("score_calculation", "build_final_result")
-workflow.add_edge("build_final_result", END)
+workflow.set_entry_point("extract_resume_claims")
+
+def router(state: AgentState, next_node: str) -> str:
+    if state.get("error"):
+        return "terminal_error"
+    return next_node
+
+workflow.add_conditional_edges("extract_resume_claims", lambda s: router(s, "fetch_github_data"))
+workflow.add_conditional_edges("fetch_github_data", lambda s: router(s, "analyze_github_quality"))
+workflow.add_conditional_edges("analyze_github_quality", lambda s: router(s, "ai_analysis"))
+workflow.add_conditional_edges("ai_analysis", lambda s: router(s, "score_calculation"))
+workflow.add_conditional_edges("score_calculation", lambda s: router(s, "build_final_result"))
+workflow.add_conditional_edges("build_final_result", lambda s: router(s, "end"))
+workflow.add_edge("terminal_error", END)
+workflow.add_edge("end", END)
 
 compiled_graph = workflow.compile()
 
-
 def run_full_verification(job_data: dict) -> dict:
-    """
-    Executes the entire verification graph end-to-end for the given job data.
-    """
     logger.info(f"Invoking verification graph for Transaction ID: {job_data.get('transactionId')}")
     
     initial_state = {
@@ -293,23 +230,26 @@ def run_full_verification(job_data: dict) -> dict:
         "resume_text": job_data.get("resumeText", ""),
         "jd_text": job_data.get("jdText", ""),
         "client_id": job_data.get("clientId", ""),
+        
+        "resume_claims": {},
         "github_user_exists": False,
-        "github_user_data": {},
-        "github_repos": [],
-        "claimed_projects": [],
-        "project_matches": [],
-        "authorship_results": [],
-        "account_health": {},
-        "ai_alignment": {},
+        "rawGithubData": {},
+        "aiAnalysis": {},
+        
+        "claimed_projects_count": 0,
+        "verified_projects_count": 0,
+        "commit_authorship": False,
+        "skill_alignment": 0,
+        
         "confidence_score": 0,
         "status": "flagged",
         "flags": [],
+        "error": None,
         "final_result": {}
     }
     
     try:
         from app.services import db_service
-        # Mark job as active in the database
         db_service.update_job_record(job_data.get("transactionId"), "active", active=True)
         db_service.update_transaction_status(job_data.get("transactionId"), "processing")
         
@@ -317,10 +257,6 @@ def run_full_verification(job_data: dict) -> dict:
         return final_state.get("final_result", {})
     except Exception as e:
         logger.error(f"Unhandled graph execution error: {e}")
-        try:
-            from app.services import db_service
-            db_service.update_job_record(job_data.get("transactionId"), "failed", error_message=str(e))
-            db_service.update_transaction_status(job_data.get("transactionId"), "failed")
-        except Exception as db_err:
-            logger.error(f"Failed to record unhandled failure status: {db_err}")
+        # Invoke terminal error manually if graph totally explodes
+        node_terminal_error({"transaction_id": job_data.get("transactionId"), "error": str(e)})
         raise e
