@@ -47,7 +47,7 @@ def extract_resume_claims_node(state: dict) -> dict:
                 {"role": "system", "content": "You are a precise JSON extractor that only outputs raw JSON objects."},
                 {"role": "user", "content": prompt}
             ],
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             temperature=0.0
         )
         response_text = chat_completion.choices[0].message.content

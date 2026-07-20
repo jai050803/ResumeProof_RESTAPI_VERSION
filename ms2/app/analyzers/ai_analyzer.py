@@ -110,7 +110,7 @@ Do not output anything else.
                 {"role": "system", "content": "You are a precise JSON extractor that only outputs raw JSON objects."},
                 {"role": "user", "content": prompt}
             ],
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             temperature=0.0
         )
         response_text = chat_completion.choices[0].message.content
