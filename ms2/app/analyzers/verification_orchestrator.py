@@ -215,9 +215,8 @@ workflow.add_conditional_edges("fetch_github_data", lambda s: router(s, "analyze
 workflow.add_conditional_edges("analyze_github_quality", lambda s: router(s, "ai_analysis"))
 workflow.add_conditional_edges("ai_analysis", lambda s: router(s, "score_calculation"))
 workflow.add_conditional_edges("score_calculation", lambda s: router(s, "build_final_result"))
-workflow.add_conditional_edges("build_final_result", lambda s: router(s, "end"))
+workflow.add_conditional_edges("build_final_result", lambda s: router(s, END))
 workflow.add_edge("terminal_error", END)
-workflow.add_edge("end", END)
 
 compiled_graph = workflow.compile()
 
