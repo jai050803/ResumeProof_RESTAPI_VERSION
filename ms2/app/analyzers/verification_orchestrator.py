@@ -1,4 +1,5 @@
 from typing import TypedDict, List, Dict, Any, Optional
+import json
 import httpx
 from langgraph.graph import StateGraph, END
 from app.config import settings
@@ -139,13 +140,21 @@ def node_build_final(state: AgentState) -> Dict[str, Any]:
             "aiAnalysis": ai_analysis if ai_analysis else None
         }
         
+        # ms1 Prisma schema stores rawGithubData and aiAnalysis as String? columns,
+        # so we must serialize them to JSON strings in the wire payload.
+        ms1_result_data = {
+            **result_data,
+            "rawGithubData": json.dumps(raw_github) if raw_github else None,
+            "aiAnalysis": json.dumps(ai_analysis) if ai_analysis else None,
+        }
+        
         payload = {
             "transactionId": transaction_id,
             "clientId": state.get("client_id", ""),
-            "resultData": result_data
+            "resultData": ms1_result_data
         }
         
-        # Write to DB locally first
+        # Write to local DB using the raw dict (not serialized strings)
         from app.services import db_service
         db_service.write_verification_result(transaction_id, result_data)
         db_service.update_transaction_status(transaction_id, result_data["status"], completed=True)
