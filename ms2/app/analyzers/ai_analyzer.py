@@ -59,7 +59,7 @@ def perform_ai_verification(resume_claims: dict, raw_github_data: dict) -> dict:
 You are a technical resume verification engine. You receive a candidate's resume claims and their actual GitHub profile data. Your job is to determine how truthful and accurate the resume is.
 
 RESUME CLAIMS:
-{json.dumps(resumeClaims, indent=2) if resume_claims else "{}"}
+{json.dumps(resume_claims, indent=2) if resume_claims else "{}"}
 
 GITHUB DATA:
 - Username: {github_username}

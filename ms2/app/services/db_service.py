@@ -38,23 +38,23 @@ def write_verification_result(transaction_id: str, result: dict) -> str:
     """
     Inserts a verification result into the results table.
     Supports upsert on transactionId conflict.
+    result dict uses the flat shape: { confidenceScore, status, githubUsername, ... }
     """
     result_id = str(uuid.uuid4())
-    github_data = result.get("github", {})
-    
+
     score = result.get("confidenceScore")
     status = result.get("status")
-    username = github_data.get("username")
-    repos_found = github_data.get("reposFound")
-    claimed_projects = github_data.get("claimedProjects")
-    verified_projects = github_data.get("verifiedProjects")
-    commit_authorship = github_data.get("commitAuthorship")
+    username = result.get("githubUsername")
+    repos_found = result.get("reposFound")
+    claimed_projects = result.get("claimedProjects")
+    verified_projects = result.get("verifiedProjects")
+    commit_authorship = result.get("commitAuthorship")
     skill_alignment = result.get("skillAlignment")
-    
+
     matched_skills = Json(result.get("matchedSkills", []))
     missing_skills = Json(result.get("missingSkills", []))
     flags = Json(result.get("flags", []))
-    
+
     sql = """
     INSERT INTO results (
         id, "transactionId", "confidenceScore", status, "githubUsername", 
@@ -78,7 +78,7 @@ def write_verification_result(transaction_id: str, result: dict) -> str:
         "missingSkills" = EXCLUDED."missingSkills",
         flags = EXCLUDED.flags
     """
-    
+
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, (
@@ -86,9 +86,10 @@ def write_verification_result(transaction_id: str, result: dict) -> str:
                 repos_found, claimed_projects, verified_projects, commit_authorship,
                 skill_alignment, matched_skills, missing_skills, flags
             ))
-            
+
     logger.info(f"Result row written/updated for transaction {transaction_id}")
     return result_id
+
 
 def update_transaction_status(transaction_id: str, status: str, completed: bool = False):
     """
