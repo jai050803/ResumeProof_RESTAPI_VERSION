@@ -123,8 +123,7 @@ def node_build_final(state: AgentState) -> Dict[str, Any]:
             matched_skills = ai_analysis["skillVerification"].get("verifiedSkills", [])
             missing_skills = ai_analysis["skillVerification"].get("missingFromGithub", [])
             
-        payload = {
-            "transactionId": transaction_id,
+        result_data = {
             "confidenceScore": state.get("confidence_score", 0),
             "status": state.get("status", "flagged"),
             "githubUsername": username,
@@ -140,10 +139,16 @@ def node_build_final(state: AgentState) -> Dict[str, Any]:
             "aiAnalysis": ai_analysis if ai_analysis else None
         }
         
+        payload = {
+            "transactionId": transaction_id,
+            "clientId": state.get("client_id", ""),
+            "resultData": result_data
+        }
+        
         # Write to DB locally first
         from app.services import db_service
-        db_service.write_verification_result(transaction_id, payload)
-        db_service.update_transaction_status(transaction_id, payload["status"], completed=True)
+        db_service.write_verification_result(transaction_id, result_data)
+        db_service.update_transaction_status(transaction_id, result_data["status"], completed=True)
         db_service.update_job_record(transaction_id, "done")
         
         # Handoff to MS1
@@ -159,7 +164,7 @@ def node_build_final(state: AgentState) -> Dict[str, Any]:
             logger.error(f"MS1 rejected result with status {resp.status_code}: {resp.text}")
             # Spec: "If non-2xx, log error and still mark job complete"
             
-        return {"final_result": payload}
+        return {"final_result": result_data}
     except Exception as e:
         logger.error(f"Error in build_final: {e}")
         return {"error": str(e)}
@@ -169,11 +174,16 @@ def node_terminal_error(state: AgentState) -> Dict[str, Any]:
     logger.error(f"Terminal error node invoked. Error: {state.get('error')}")
     transaction_id = state.get("transaction_id")
     
-    payload = {
-        "transactionId": transaction_id,
+    result_data = {
         "confidenceScore": 0,
         "status": "error",
         "flags": ["PIPELINE_ERROR"]
+    }
+    
+    payload = {
+        "transactionId": transaction_id,
+        "clientId": state.get("client_id", ""),
+        "resultData": result_data
     }
     
     try:
@@ -190,7 +200,7 @@ def node_terminal_error(state: AgentState) -> Dict[str, Any]:
     except Exception as fallback_e:
         logger.error(f"Failed to process terminal error fallback: {fallback_e}")
         
-    return {"final_result": payload}
+    return {"final_result": result_data}
 
 # Build graph
 workflow = StateGraph(AgentState)
