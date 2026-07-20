@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { updateCandidateByTrackingId, readCandidates } from "@/lib/candidates";
+import { updateCandidateByTrackingId, getCandidateByTrackingId } from "@/lib/candidates";
 import { VerificationResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -67,11 +67,10 @@ export async function POST(req: NextRequest) {
     };
 
     // Find candidate by transactionId
-    const candidates = readCandidates();
-    const candidate = candidates.find((c) => c.trackingId === data.transactionId);
+    const candidate = await getCandidateByTrackingId(data.transactionId);
 
     if (candidate) {
-      updateCandidateByTrackingId(data.transactionId, {
+      await updateCandidateByTrackingId(data.transactionId, {
         verificationStatus: result.status,
         verificationResult: result,
         verifiedAt: new Date().toISOString(),

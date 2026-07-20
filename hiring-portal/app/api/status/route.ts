@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "trackingId required" }, { status: 400 });
   }
 
-  const candidate = getCandidateByTrackingId(trackingId);
+  const candidate = await getCandidateByTrackingId(trackingId);
   if (!candidate) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

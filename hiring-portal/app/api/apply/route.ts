@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Persist candidate locally
-  appendCandidate({
+  await appendCandidate({
     id: uuidv4(),
     name,
     email,
