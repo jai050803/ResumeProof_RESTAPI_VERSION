@@ -220,7 +220,7 @@ function Nav() {
           >
             Get API Key
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </Link>
+          </a>
         </div>
 
         <button className="md:hidden p-2 text-slate-500" onClick={() => setMobileOpen(o => !o)}>
@@ -382,7 +382,7 @@ function Hero() {
               >
                 Get API Key — Free
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5L11.5 7 8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </Link>
+              </a>
               <a
                 href="#docs"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-slate-700 bg-white ring-1 ring-slate-200 transition-all hover:ring-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 active:scale-95"
@@ -390,7 +390,7 @@ function Hero() {
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h10M2 11h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
                 View Docs
-              </Link>
+              </a>
             </div>
 
             {/* Quick code preview */}
@@ -801,7 +801,7 @@ function Pricing() {
                 style={tier.highlight ? { background: 'linear-gradient(135deg, #6366f1, #4f46e5)', fontFamily: 'Space Grotesk, sans-serif' } : { fontFamily: 'Space Grotesk, sans-serif' }}
               >
                 {tier.cta}
-              </Link>
+              </a>
             </div>
           ))}
         </div>
@@ -839,14 +839,14 @@ function CTA() {
           >
             Get your free API key
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5L11.5 7 8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </Link>
+          </a>
           <a
             href="#docs"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm font-semibold text-indigo-200 ring-1 ring-indigo-500/50 transition-all hover:ring-indigo-400 hover:text-white"
             style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           >
             Read the docs
-          </Link>
+          </a>
         </div>
 
         <p className="mt-8 text-xs text-indigo-400">100 verifications/month free · No credit card · Cancel anytime</p>
