@@ -37,29 +37,29 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-      <p className="text-zinc-400 mb-8">Manage your account preferences and integrations.</p>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Settings</h1>
+      <p className="text-slate-500 mb-8">Manage your account preferences and integrations.</p>
 
       <div className="space-y-8">
-        <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl shadow-xl">
-          <h2 className="text-xl font-bold text-white mb-4">Organization Profile</h2>
+        <div className="bg-white border border-slate-200 shadow-slate-200/50 p-6 rounded-2xl shadow-xl">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Organization Profile</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-zinc-500 text-sm font-medium mb-1">Organization Name</label>
+              <label className="block text-slate-500 text-sm font-medium mb-1">Organization Name</label>
               <input 
                 type="text" 
                 disabled 
                 value={profile?.name || ''} 
-                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-zinc-400 cursor-not-allowed" 
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-500 cursor-not-allowed" 
               />
             </div>
             <div>
-              <label className="block text-zinc-500 text-sm font-medium mb-1">Email Address</label>
+              <label className="block text-slate-500 text-sm font-medium mb-1">Email Address</label>
               <input 
                 type="email" 
                 disabled 
                 value={profile?.email || ''} 
-                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-zinc-400 cursor-not-allowed" 
+                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-500 cursor-not-allowed" 
               />
             </div>
           </div>
