@@ -2,15 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 type NavItem = { label: string; href: string }
 type Feature = { icon: string; title: string; desc: string; badge?: string }
 type Step = { num: string; title: string; desc: string; detail: string }
 type PricingTier = { name: string; price: string; unit: string; desc: string; features: string[]; cta: string; highlight: boolean }
 type Stat = { value: string; label: string }
-
-// ─── Data ────────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Docs', href: '#docs' },
@@ -30,7 +26,7 @@ const FEATURES: Feature[] = [
   {
     icon: '⬡',
     title: 'GitHub Cross-Check',
-    desc: 'Validates claimed skills against actual repository activity, commits, languages, and contribution history. No guesses — real signals.',
+    desc: 'Validates claimed skills against actual repository activity, commits, languages, and contribution history. No guesses, real signals.',
     badge: 'Core',
   },
   {
@@ -46,7 +42,7 @@ const FEATURES: Feature[] = [
   {
     icon: '◉',
     title: 'Confidence Score',
-    desc: 'Returns a 0–100 deterministic score built from weighted signals — not black-box AI. Every point is traceable to a specific data source.',
+    desc: 'Returns a 0-100 deterministic score built from weighted signals, not black-box AI. Every point is traceable to a specific data source.',
     badge: 'Deterministic',
   },
   {
@@ -66,7 +62,7 @@ const STEPS: Step[] = [
     num: '01',
     title: 'Upload PDF + GitHub handle',
     desc: 'Send a resume PDF and the candidate\'s GitHub username in a single API call.',
-    detail: 'POST /v1/verify — multipart or JSON with a PDF URL. Optional: org token for private repo access.',
+    detail: 'POST /v1/verify - multipart or JSON with a PDF URL. Optional: org token for private repo access.',
   },
   {
     num: '02',
@@ -149,8 +145,6 @@ const CODE_RESPONSE = `{
   "audit_url": "https://audit.resumeproof.dev/vrfy_01HXKM8N4P9QRS",
   "processing_ms": 143
 }`
-
-// ─── Micro-components ────────────────────────────────────────────────────────
 
 function Badge({ children, variant = 'brand' }: { children: React.ReactNode; variant?: 'brand' | 'green' | 'amber' | 'slate' }) {
   const colors = {
@@ -245,14 +239,10 @@ function Nav() {
   )
 }
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-
 function HeroMockup() {
   return (
     <div className="relative">
-      {/* Browser chrome */}
       <div className="rounded-xl overflow-hidden shadow-2xl shadow-indigo-200/50 ring-1 ring-slate-900/10">
-        {/* URL bar */}
         <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-3">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-red-400" />
@@ -265,13 +255,11 @@ function HeroMockup() {
           </div>
         </div>
 
-        {/* Dashboard content */}
         <div className="bg-white p-5 space-y-4">
-          {/* Header row */}
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs text-slate-400 mb-1" style={{ fontFamily: 'Fira Code, monospace' }}>vrfy_01HXKM8N4P9QRS</p>
-              <p className="font-semibold text-slate-900 text-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Alex Chen — Senior Backend Engineer</p>
+              <p className="font-semibold text-slate-900 text-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Alex Chen - Senior Backend Engineer</p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>87</div>
@@ -279,14 +267,12 @@ function HeroMockup() {
             </div>
           </div>
 
-          {/* Score bar */}
           <div className="space-y-1">
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full w-[87%] transition-all duration-1000" style={{ background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }} />
             </div>
           </div>
 
-          {/* Claim results */}
           <div className="space-y-2">
             {[
               { label: 'Led backend at Stripe (2021–23)', ok: true, note: '847 commits · github.com/stripe' },
@@ -310,7 +296,6 @@ function HeroMockup() {
             ))}
           </div>
 
-          {/* Footer */}
           <div className="flex items-center justify-between pt-1">
             <span className="text-[10px] text-slate-400" style={{ fontFamily: 'Fira Code, monospace' }}>processed in 143ms</span>
             <Badge variant="green">✓ Webhook delivered</Badge>
@@ -318,7 +303,6 @@ function HeroMockup() {
         </div>
       </div>
 
-      {/* Floating signal card */}
       <div className="absolute -left-12 top-1/3 hidden lg:block">
         <div className="bg-white rounded-xl shadow-lg shadow-slate-200/60 ring-1 ring-slate-100 p-3 w-44">
           <p className="text-[9px] text-slate-400 uppercase tracking-wider mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>GitHub Signals</p>
@@ -341,7 +325,6 @@ function HeroMockup() {
 function Hero() {
   return (
     <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
-      {/* Background grid */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -349,18 +332,16 @@ function Hero() {
           backgroundSize: '28px 28px',
         }}
       />
-      {/* Glow blobs */}
       <div className="absolute top-10 left-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
       <div className="absolute top-20 right-1/4 w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
 
       <div className="relative max-w-6xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left */}
           <div>
             <div className="mb-6">
               <Badge variant="brand">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                Resume Verification API · v2.4
+                Resume Verification API · v1.0
               </Badge>
             </div>
 
@@ -371,7 +352,7 @@ function Hero() {
             </h1>
 
             <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg">
-              ResumeProof cross-checks PDF claims against real repository activity, commits, and skills. Returns a transparent confidence score and structured flags — no black-box AI.
+              ResumeProof cross-checks PDF claims against real repository activity, commits, and skills. Returns a transparent confidence score and structured flags, no black-box AI.
             </p>
 
             <div className="flex flex-wrap gap-3 mb-10">
@@ -380,7 +361,7 @@ function Hero() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-xl hover:shadow-indigo-200 active:scale-95"
                 style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', fontFamily: 'Space Grotesk, sans-serif' }}
               >
-                Get API Key — Free
+                Get API Key - Free
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5L11.5 7 8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </a>
               <a
@@ -393,7 +374,6 @@ function Hero() {
               </a>
             </div>
 
-            {/* Quick code preview */}
             <div className="bg-slate-900 rounded-xl p-4 overflow-x-auto">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full bg-indigo-400" />
@@ -418,13 +398,11 @@ function Hero() {
             </div>
           </div>
 
-          {/* Right — Dashboard mockup */}
           <div className="relative pl-0 lg:pl-8">
             <HeroMockup />
           </div>
         </div>
 
-        {/* Stats bar */}
         <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200 rounded-2xl overflow-hidden shadow-sm">
           {STATS.map(stat => (
             <div key={stat.label} className="bg-white px-6 py-5 text-center">
@@ -438,8 +416,6 @@ function Hero() {
   )
 }
 
-// ─── Problem / Solution ───────────────────────────────────────────────────────
-
 function ProblemSection() {
   return (
     <section className="py-20 bg-slate-950">
@@ -452,13 +428,13 @@ function ProblemSection() {
               <span style={{ color: '#f87171' }}>unverifiable by design.</span>
             </h2>
             <p className="text-slate-400 leading-relaxed mb-6">
-              58% of candidates misrepresent experience. ATS systems pass on textual keywords — not actual ability. Your team wastes hours interviewing candidates who can&apos;t code their way out of a hello-world.
+              58% of candidates misrepresent experience. ATS systems pass on textual keywords, not actual ability. Your team wastes hours interviewing candidates who can&apos;t code their way out of a hello-world.
             </p>
             <ul className="space-y-3">
               {[
-                'Claimed &quot;Expert in Rust&quot; — zero Rust commits',
-                '&quot;Led team of 10&quot; — solo contributor on all repos',
-                '&quot;5 years TypeScript&quot; — first TS file dated 8 months ago',
+                'Claimed &quot;Expert in Rust&quot; - zero Rust commits',
+                '&quot;Led team of 10&quot; - solo contributor on all repos',
+                '&quot;5 years TypeScript&quot; - first TS file dated 8 months ago',
                 'Fabricated company names are undetected by ATS',
               ].map(item => (
                 <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
@@ -476,12 +452,12 @@ function ProblemSection() {
               <span style={{ color: '#34d399' }}>actual code.</span>
             </h2>
             <p className="text-slate-400 leading-relaxed mb-6">
-              ResumeProof maps every claim to deterministic GitHub evidence. Not an AI guess — a traceable signal. Each flag cites the specific commit history, language breakdown, or date mismatch that caused it.
+              ResumeProof maps every claim to deterministic GitHub evidence. Not an AI guess, a traceable signal. Each flag cites the specific commit history, language breakdown, or date mismatch that caused it.
             </p>
             <ul className="space-y-3">
               {[
                 'Per-claim verification with source evidence',
-                'Deterministic score — no black-box AI',
+                'Deterministic score - no black-box AI',
                 'Integrates in < 30 min via REST + webhooks',
                 'SOC 2 Type II · GDPR compliant · signed payloads',
               ].map(item => (
@@ -498,8 +474,6 @@ function ProblemSection() {
   )
 }
 
-// ─── How it works ─────────────────────────────────────────────────────────────
-
 function HowItWorks() {
   return (
     <section id="docs" className="py-24 bg-white">
@@ -512,7 +486,6 @@ function HowItWorks() {
         </div>
 
         <div className="relative">
-          {/* Connector line */}
           <div className="hidden md:block absolute top-8 left-1/6 right-1/6 h-px bg-gradient-to-r from-transparent via-indigo-200 to-transparent" />
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -539,8 +512,6 @@ function HowItWorks() {
     </section>
   )
 }
-
-// ─── Features ─────────────────────────────────────────────────────────────────
 
 function Features() {
   return (
@@ -579,8 +550,6 @@ function Features() {
   )
 }
 
-// ─── Code / API ───────────────────────────────────────────────────────────────
-
 type CodeTab = 'request' | 'response'
 
 function ApiSection() {
@@ -597,14 +566,13 @@ function ApiSection() {
     <section id="api" className="py-24 bg-white">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          {/* Left */}
           <div>
             <p className="text-xs font-medium text-indigo-500 uppercase tracking-widest mb-3" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>API Integration</p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               One endpoint.<br />Complete verification.
             </h2>
             <p className="text-slate-500 leading-relaxed mb-8">
-              POST a PDF URL and GitHub handle. Receive a structured JSON result — synchronously for small payloads, or via signed webhook for async batch verification.
+              POST a PDF URL and GitHub handle. Receive a structured JSON result, synchronously for small payloads or via signed webhook for async batch verification.
             </p>
 
             <div className="space-y-4">
@@ -630,7 +598,7 @@ function ApiSection() {
                 {
                   method: 'DELETE',
                   path: '/v1/verify/:id',
-                  desc: 'GDPR deletion — removes all PII',
+                  desc: 'GDPR deletion - removes all PII',
                   color: 'bg-red-100 text-red-700',
                 },
               ].map(ep => (
@@ -650,9 +618,7 @@ function ApiSection() {
             </div>
           </div>
 
-          {/* Right — Code block */}
           <div className="rounded-2xl overflow-hidden shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5">
-            {/* Tab bar */}
             <div className="bg-slate-800 flex items-center gap-0 border-b border-slate-700">
               {(['request', 'response'] as CodeTab[]).map(t => (
                 <button
@@ -677,7 +643,6 @@ function ApiSection() {
               </button>
             </div>
 
-            {/* Code */}
             <div className="bg-slate-900 p-5 overflow-x-auto max-h-[480px] overflow-y-auto">
               <pre className="text-xs leading-6 text-slate-300" style={{ fontFamily: 'Fira Code, monospace' }}>
                 {tab === 'request' ? CODE_REQUEST : CODE_RESPONSE}
@@ -689,8 +654,6 @@ function ApiSection() {
     </section>
   )
 }
-
-// ─── Social proof ─────────────────────────────────────────────────────────────
 
 function SocialProof() {
   const logos = ['Workday', 'Greenhouse', 'Lever', 'HackerRank', 'AngelList', 'Rippling']
@@ -719,7 +682,7 @@ function SocialProof() {
               metric: 'fraud reduction',
             },
             {
-              quote: "The deterministic scoring is a breath of fresh air. We can explain every flag to candidates — no black-box surprises.",
+              quote: "The deterministic scoring is a breath of fresh air. We can explain every flag to candidates, no black-box surprises.",
               author: 'Marcus Obi',
               role: 'CTO, TalentOS',
               score: '<180ms',
@@ -752,8 +715,6 @@ function SocialProof() {
     </section>
   )
 }
-
-// ─── Pricing ──────────────────────────────────────────────────────────────────
 
 function Pricing() {
   return (
@@ -810,8 +771,6 @@ function Pricing() {
   )
 }
 
-// ─── CTA ──────────────────────────────────────────────────────────────────────
-
 function CTA() {
   return (
     <section className="py-24 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #1e1b4b 0%, #312e81 40%, #1e3a5f 100%)' }}>
@@ -854,8 +813,6 @@ function CTA() {
     </section>
   )
 }
-
-// ─── Footer ───────────────────────────────────────────────────────────────────
 
 function Footer() {
   return (
@@ -900,8 +857,6 @@ function Footer() {
     </footer>
   )
 }
-
-// ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function Home() {
   return (

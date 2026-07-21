@@ -11,7 +11,7 @@ function ScoreBar({ score }: { score: number }) {
   const color = score >= 75 ? "bg-emerald-500" : score >= 50 ? "bg-yellow-500" : "bg-red-500";
   const textColor = score >= 75 ? "text-emerald-400" : score >= 50 ? "text-yellow-400" : "text-red-400";
   return (
-    <div className="flex items-center gap-2 min-w-[110px]">
+    <div className="flex min-w-27.5 items-center gap-2">
       <div className="flex-1 bg-gray-800 rounded-full h-1.5">
         <div className={`${color} h-1.5 rounded-full transition-all`} style={{ width: `${score}%` }} />
       </div>
@@ -48,6 +48,162 @@ function VerdictBadge({ verdict }: { verdict: ProjectMatch["verdict"] }) {
     <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${map[verdict] ?? map.not_found}`}>
       {verdict.replace("_", " ")}
     </span>
+  );
+}
+
+const DASHBOARD_NAV = [
+  { label: "Overview", href: "#overview" },
+  { label: "Candidates", href: "#candidates" },
+  { label: "Apply", href: "/apply" },
+  { label: "Home", href: "/" },
+  { label: "Docs", href: "https://docs.resumeproof.online", external: true },
+];
+
+function DashboardSidebar({
+  total,
+  verified,
+  flagged,
+  pending,
+  onNavigate,
+}: {
+  total: number;
+  verified: number;
+  flagged: number;
+  pending: number;
+  onNavigate?: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col gap-6 p-6">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-400">ResumeProof</p>
+        <h2 className="mt-2 text-2xl font-black text-white">Hiring Portal</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          Review candidate verification results from one place, with a mobile-safe navigation surface.
+        </p>
+      </div>
+
+      <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+        {[
+          { label: "Total", value: total },
+          { label: "Verified", value: verified },
+          { label: "Flagged", value: flagged },
+          { label: "Pending", value: pending },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center justify-between rounded-2xl bg-slate-950/70 px-4 py-3">
+            <span className="text-xs uppercase tracking-widest text-slate-500">{item.label}</span>
+            <span className="text-lg font-black text-white">{item.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <nav className="space-y-2">
+        {DASHBOARD_NAV.map((item) => {
+          const baseClass = "flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors";
+          if (item.external) {
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noreferrer"
+                className={`${baseClass} text-slate-300 hover:bg-white/5 hover:text-white`}
+                onClick={onNavigate}
+              >
+                <span>{item.label}</span>
+                <span className="text-xs text-slate-500">↗</span>
+              </a>
+            );
+          }
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`${baseClass} text-slate-300 hover:bg-white/5 hover:text-white`}
+              onClick={onNavigate}
+            >
+              <span>{item.label}</span>
+              <span className="text-xs text-slate-500">→</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mt-auto rounded-3xl border border-violet-500/20 bg-linear-to-br from-violet-500/10 to-indigo-500/10 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">Quick action</p>
+        <p className="mt-2 text-sm text-slate-300">Invite candidates into the verification flow.</p>
+        <Link
+          href="/apply"
+          onClick={onNavigate}
+          className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:from-violet-500 hover:to-indigo-500"
+        >
+          Open Application Form
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function CandidateCard({
+  candidate,
+  onOpenDetails,
+}: {
+  candidate: Candidate;
+  onOpenDetails: () => void;
+}) {
+  const result = candidate.verificationResult;
+  const matchedCount = result?.matchedSkills?.length ?? 0;
+  const totalClaimed = (result?.matchedSkills?.length ?? 0) + (result?.missingSkills?.length ?? 0);
+
+  return (
+    <article className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/10 backdrop-blur">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-white">{candidate.name}</h3>
+          <p className="text-sm text-slate-400">{candidate.role}</p>
+        </div>
+        <StatusBadge status={candidate.verificationStatus} />
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-3">
+          <p className="text-[11px] uppercase tracking-widest text-slate-500">GitHub</p>
+          <a
+            href={`https://github.com/${candidate.githubUsername}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 block break-all text-sm font-mono text-violet-300 hover:text-violet-200"
+          >
+            @{candidate.githubUsername}
+          </a>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-3">
+          <p className="text-[11px] uppercase tracking-widest text-slate-500">Score</p>
+          <div className="mt-2">{result ? <ScoreBar score={result.confidenceScore} /> : <span className="text-xs text-slate-500">Pending</span>}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-slate-400">
+        <span>{result ? `${matchedCount}/${totalClaimed} skills` : "Verification pending"}</span>
+        <span>{new Date(candidate.appliedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+      </div>
+
+      {result?.flags?.length ? (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {result.flags.slice(0, 3).map((flag) => (
+            <span key={flag} className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs text-red-300">
+              {flag.length > 18 ? `${flag.slice(0, 16)}…` : flag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <button
+        onClick={onOpenDetails}
+        className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:border-white/20 hover:bg-white/10"
+      >
+        View Details
+      </button>
+    </article>
   );
 }
 
@@ -232,6 +388,7 @@ function AdminContent() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Check key from URL or input
   useEffect(() => {
@@ -268,25 +425,37 @@ function AdminContent() {
 
   if (!authed) {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-white">Admin Access</h1>
-            <p className="text-gray-500 text-sm mt-1">Enter your admin key to continue</p>
+      <main className="min-h-screen bg-slate-950 px-4 text-slate-100">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-1/4 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
+          <div className="absolute bottom-20 right-1/4 h-72 w-72 rounded-full bg-cyan-600/10 blur-3xl" />
+        </div>
+        <div className="relative mx-auto flex min-h-screen w-full max-w-md items-center justify-center">
+          <div className="w-full rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8">
+            <div className="text-center mb-8">
+              <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-indigo-500 text-white font-black">
+                TC
+              </div>
+              <h1 className="text-2xl font-black text-white">Admin Access</h1>
+              <p className="mt-1 text-sm text-slate-400">Enter your admin key to continue</p>
+            </div>
+            <form onSubmit={handleAuth} className="space-y-4">
+              <input
+                type="password"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="Admin key..."
+                className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              {authError && <p className="text-sm text-red-400">Invalid key</p>}
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 py-3 font-semibold text-white transition-all hover:from-violet-500 hover:to-indigo-500"
+              >
+                Access Dashboard →
+              </button>
+            </form>
           </div>
-          <form onSubmit={handleAuth} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-            <input
-              type="password"
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="Admin key..."
-              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-600"
-            />
-            {authError && <p className="text-red-400 text-sm">Invalid key</p>}
-            <button type="submit" className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition-all">
-              Access Dashboard →
-            </button>
-          </form>
         </div>
       </main>
     );
@@ -296,116 +465,157 @@ function AdminContent() {
   const verified = candidates.filter((c) => c.verificationStatus === "verified").length;
   const flagged = candidates.filter((c) => c.verificationStatus === "flagged").length;
   const other = total - verified - flagged;
+  const summary = { total, verified, flagged, pending: other };
 
   return (
-    <main className="min-h-screen bg-gray-950">
-      {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-950/95 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-black text-white">TechCorp Hiring Portal</h1>
-            <p className="text-xs text-gray-500">Candidate Verification Dashboard</p>
-          </div>
-          <a
-            href="https://docs.resumeproof.online"
-            target="_blank"
-            className="inline-flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/30 text-violet-400 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-violet-500/20 transition-colors"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            Powered by ResumeProof
-          </a>
-        </div>
-      </header>
+    <main className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+        <aside className="hidden lg:flex w-80 shrink-0 border-r border-white/10 bg-slate-950/85 backdrop-blur-xl">
+          <DashboardSidebar {...summary} />
+        </aside>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats */}
-        <div className="flex gap-4 mb-8">
-          <StatCard label="Total Candidates" value={total} color="border-gray-800" />
-          <StatCard label="Verified" value={verified} color="border-emerald-500/30" />
-          <StatCard label="Flagged" value={flagged} color="border-yellow-500/30" />
-          <StatCard label="Rejected / Pending" value={other} color="border-gray-700" />
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 transition-colors hover:bg-white/10 lg:hidden"
+                  onClick={() => setMobileNavOpen(true)}
+                  aria-label="Open dashboard navigation"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-400">TechCorp Hiring Portal</p>
+                  <h1 className="text-lg font-black text-white sm:text-2xl">Candidate Verification Dashboard</h1>
+                </div>
+              </div>
 
-        {/* Table */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-300">Candidates</h2>
-            <span className="text-xs text-gray-600">Auto-refreshes every 30s</span>
-          </div>
-
-          {candidates.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-600 text-sm">No candidates yet.</p>
-              <Link href="/apply" className="text-violet-400 text-sm hover:underline mt-2 inline-block">Invite candidates to apply →</Link>
+              <a
+                href="https://docs.resumeproof.online"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300 transition-colors hover:bg-violet-500/20 sm:inline-flex"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                Powered by ResumeProof
+              </a>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    {["Name", "Role", "GitHub", "Score", "Status", "Skills Match", "Flags", "Applied At", "Actions"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800/60">
-                  {candidates.map((c) => {
-                    const result = c.verificationResult;
-                    const matchedCount = result?.matchedSkills?.length ?? 0;
-                    const totalClaimed = (result?.matchedSkills?.length ?? 0) + (result?.missingSkills?.length ?? 0);
-                    return (
-                      <tr key={c.id} className="hover:bg-gray-800/30 transition-colors group">
-                        <td className="px-4 py-3.5 font-medium text-white whitespace-nowrap">{c.name}</td>
-                        <td className="px-4 py-3.5 text-gray-400 whitespace-nowrap text-xs">{c.role}</td>
-                        <td className="px-4 py-3.5">
-                          <a href={`https://github.com/${c.githubUsername}`} target="_blank" className="text-violet-400 hover:underline text-xs font-mono">
-                            @{c.githubUsername}
-                          </a>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          {result ? <ScoreBar score={result.confidenceScore} /> : <span className="text-gray-600 text-xs">—</span>}
-                        </td>
-                        <td className="px-4 py-3.5"><StatusBadge status={c.verificationStatus} /></td>
-                        <td className="px-4 py-3.5 text-xs text-gray-400 whitespace-nowrap">
-                          {result ? `${matchedCount}/${totalClaimed} skills` : "—"}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <div className="flex flex-wrap gap-1 max-w-[180px]">
-                            {(result?.flags ?? []).slice(0, 3).map((f) => (
-                              <span key={f} className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                {f.length > 18 ? f.slice(0, 16) + "…" : f}
-                              </span>
+          </header>
+
+          <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">
+            <div className="grid gap-5">
+              <section id="overview" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard label="Total Candidates" value={total} color="border-white/10" />
+                <StatCard label="Verified" value={verified} color="border-emerald-500/30" />
+                <StatCard label="Flagged" value={flagged} color="border-yellow-500/30" />
+                <StatCard label="Rejected / Pending" value={other} color="border-slate-700" />
+              </section>
+
+              <section id="candidates" className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl shadow-black/15 backdrop-blur">
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
+                  <div>
+                    <h2 className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-300">Candidates</h2>
+                    <p className="mt-1 text-xs text-slate-500">Auto-refreshes every 30 seconds</p>
+                  </div>
+                  <Link href="/apply" className="text-sm font-medium text-violet-300 hover:text-violet-200">
+                    Invite candidates
+                  </Link>
+                </div>
+
+                {candidates.length === 0 ? (
+                  <div className="px-6 py-20 text-center">
+                    <p className="text-sm text-slate-500">No candidates yet.</p>
+                    <Link href="/apply" className="mt-2 inline-block text-sm font-medium text-violet-300 hover:text-violet-200">
+                      Open the application form →
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            {["Name", "Role", "GitHub", "Score", "Status", "Skills Match", "Flags", "Applied At", "Actions"].map((h) => (
+                              <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                {h}
+                              </th>
                             ))}
-                            {(result?.flags?.length ?? 0) > 3 && (
-                              <span className="text-xs text-gray-500">+{(result?.flags?.length ?? 0) - 3}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-xs text-gray-500 whitespace-nowrap">
-                          {new Date(c.appliedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <button
-                            onClick={() => setSelectedCandidate(c)}
-                            className="text-xs text-violet-400 hover:text-violet-300 border border-violet-500/30 hover:border-violet-500/60 px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
-                          >
-                            View Details
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {candidates.map((c) => {
+                            const result = c.verificationResult;
+                            const matchedCount = result?.matchedSkills?.length ?? 0;
+                            const totalClaimed = (result?.matchedSkills?.length ?? 0) + (result?.missingSkills?.length ?? 0);
+                            return (
+                              <tr key={c.id} className="transition-colors hover:bg-white/3">
+                                <td className="whitespace-nowrap px-4 py-3.5 font-medium text-white">{c.name}</td>
+                                <td className="whitespace-nowrap px-4 py-3.5 text-xs text-slate-400">{c.role}</td>
+                                <td className="px-4 py-3.5">
+                                  <a href={`https://github.com/${c.githubUsername}`} target="_blank" rel="noreferrer" className="font-mono text-xs text-violet-300 hover:text-violet-200 hover:underline">
+                                    @{c.githubUsername}
+                                  </a>
+                                </td>
+                                <td className="px-4 py-3.5">{result ? <ScoreBar score={result.confidenceScore} /> : <span className="text-xs text-slate-500">Pending</span>}</td>
+                                <td className="px-4 py-3.5">
+                                  <StatusBadge status={c.verificationStatus} />
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3.5 text-xs text-slate-400">{result ? `${matchedCount}/${totalClaimed} skills` : "—"}</td>
+                                <td className="px-4 py-3.5">
+                                  <div className="flex max-w-45 flex-wrap gap-1.5">
+                                    {(result?.flags ?? []).slice(0, 3).map((f) => (
+                                      <span key={f} className="whitespace-nowrap rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-xs text-red-300">
+                                        {f.length > 18 ? `${f.slice(0, 16)}…` : f}
+                                      </span>
+                                    ))}
+                                    {(result?.flags?.length ?? 0) > 3 && <span className="text-xs text-slate-500">+{(result?.flags?.length ?? 0) - 3}</span>}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-3.5 text-xs text-slate-500">
+                                  {new Date(c.appliedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <button
+                                    onClick={() => setSelectedCandidate(c)}
+                                    className="whitespace-nowrap rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300 transition-colors hover:border-violet-500/50 hover:bg-violet-500/15"
+                                  >
+                                    View Details
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="space-y-3 p-4 md:hidden">
+                      {candidates.map((c) => (
+                        <CandidateCard key={c.id} candidate={c} onOpenDetails={() => setSelectedCandidate(c)} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
             </div>
-          )}
+          </main>
         </div>
       </div>
 
-      {/* Detail panel */}
-      {selectedCandidate && (
-        <DetailPanel candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={() => setMobileNavOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-[85vw] max-w-xs border-r border-white/10 bg-slate-950/95 shadow-2xl shadow-black/40">
+            <DashboardSidebar {...summary} onNavigate={() => setMobileNavOpen(false)} />
+          </aside>
+        </div>
       )}
+
+      {selectedCandidate && <DetailPanel candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />}
     </main>
   );
 }
