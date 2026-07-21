@@ -1,6 +1,4 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -112,6 +110,7 @@ const PRICING: PricingTier[] = [
   },
 ]
 
+// ─── Code sample ─────────────────────────────────────────────────────────────
 
 const CODE_REQUEST = `curl -X POST https://api.resumeproof.dev/v1/verify \\
   -H "Authorization: Bearer rp_live_••••••••••••" \\
@@ -177,6 +176,7 @@ function GradientText({ children, className = '' }: { children: React.ReactNode;
   )
 }
 
+// ─── Nav ─────────────────────────────────────────────────────────────────────
 
 function Nav() {
   const [scrolled, setScrolled] = useState(false)
@@ -193,7 +193,7 @@ function Nav() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm' : 'bg-transparent'}`}
     >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <a href="#" className="flex items-center gap-2.5 group">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M2 11L5 2L9 9L11 5L12 11" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -201,20 +201,20 @@ function Nav() {
           </div>
           <span className="font-semibold text-slate-900 text-sm tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>ResumeProof</span>
           <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-500" style={{ fontFamily: 'Fira Code, monospace' }}>API</span>
-        </Link>
+        </a>
 
         <div className="hidden md:flex items-center gap-8">
           {NAV_ITEMS.map(item => (
-            <Link key={item.label} href={item.href} className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
+            <a key={item.label} href={item.href} className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
               {item.label}
-            </Link>
+            </a>
           ))}
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5">Sign in</Link>
+          <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5">Sign in</a>
           <a
-            href="/register"
+            href="#"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 hover:shadow-lg hover:shadow-indigo-200 active:scale-95"
             style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', fontFamily: 'Space Grotesk, sans-serif' }}
           >
@@ -231,13 +231,13 @@ function Nav() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-slate-100 px-6 pb-4 space-y-1">
           {NAV_ITEMS.map(item => (
-            <Link key={item.label} href={item.href} className="block py-2.5 text-sm text-slate-600 hover:text-indigo-600" onClick={() => setMobileOpen(false)}>
+            <a key={item.label} href={item.href} className="block py-2.5 text-sm text-slate-600 hover:text-indigo-600" onClick={() => setMobileOpen(false)}>
               {item.label}
-            </Link>
+            </a>
           ))}
           <div className="pt-3 flex flex-col gap-2">
-            <Link href="/login" className="py-2 text-center text-sm text-slate-500 border border-slate-200 rounded-lg">Sign in</Link>
-            <Link href="/register" className="py-2 text-center text-sm font-medium text-white rounded-lg" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>Get API Key</Link>
+            <a href="#" className="py-2 text-center text-sm text-slate-500 border border-slate-200 rounded-lg">Sign in</a>
+            <a href="#" className="py-2 text-center text-sm font-medium text-white rounded-lg" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>Get API Key</a>
           </div>
         </div>
       )}
@@ -376,7 +376,7 @@ function Hero() {
 
             <div className="flex flex-wrap gap-3 mb-10">
               <a
-                href="/register"
+                href="#"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-xl hover:shadow-indigo-200 active:scale-95"
                 style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', fontFamily: 'Space Grotesk, sans-serif' }}
               >
@@ -408,12 +408,12 @@ function Hero() {
                 {'  '}
                 <span className="text-amber-300">-H</span>
                 {' '}
-                <span className="text-sky-300">&quot;Authorization: Bearer rp_live_•••&quot;</span>
+                <span className="text-sky-300">"Authorization: Bearer rp_live_•••"</span>
                 {' \\\n'}
                 {'  '}
                 <span className="text-amber-300">-d</span>
                 {' '}
-                <span className="text-sky-300">&apos;{`{"resume_url": "...", "github_handle": "..."}`}&apos;</span>
+                <span className="text-sky-300">'{`{"resume_url": "...", "github_handle": "..."}`}'</span>
               </pre>
             </div>
           </div>
@@ -452,13 +452,13 @@ function ProblemSection() {
               <span style={{ color: '#f87171' }}>unverifiable by design.</span>
             </h2>
             <p className="text-slate-400 leading-relaxed mb-6">
-              58% of candidates misrepresent experience. ATS systems pass on textual keywords — not actual ability. Your team wastes hours interviewing candidates who can&apos;t code their way out of a hello-world.
+              58% of candidates misrepresent experience. ATS systems pass on textual keywords — not actual ability. Your team wastes hours interviewing candidates who can't code their way out of a hello-world.
             </p>
             <ul className="space-y-3">
               {[
-                'Claimed &quot;Expert in Rust&quot; — zero Rust commits',
-                '&quot;Led team of 10&quot; — solo contributor on all repos',
-                '&quot;5 years TypeScript&quot; — first TS file dated 8 months ago',
+                'Claimed "Expert in Rust" — zero Rust commits',
+                '"Led team of 10" — solo contributor on all repos',
+                '"5 years TypeScript" — first TS file dated 8 months ago',
                 'Fabricated company names are undetected by ATS',
               ].map(item => (
                 <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
@@ -734,7 +734,7 @@ function SocialProof() {
             },
           ].map(t => (
             <div key={t.author} className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <blockquote className="text-sm text-slate-600 leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</blockquote>
+              <blockquote className="text-sm text-slate-600 leading-relaxed mb-4">"{t.quote}"</blockquote>
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.author}</p>
@@ -796,7 +796,7 @@ function Pricing() {
               </ul>
 
               <a
-                href="/register"
+                href="#"
                 className={`w-full py-3 rounded-xl text-sm font-semibold text-center transition-all hover:opacity-90 active:scale-95 ${tier.highlight ? 'text-white' : 'text-slate-700 bg-slate-100 hover:bg-slate-200'}`}
                 style={tier.highlight ? { background: 'linear-gradient(135deg, #6366f1, #4f46e5)', fontFamily: 'Space Grotesk, sans-serif' } : { fontFamily: 'Space Grotesk, sans-serif' }}
               >
@@ -833,7 +833,7 @@ function CTA() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="/register"
+            href="#"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm font-semibold bg-white text-indigo-700 transition-all hover:bg-indigo-50 hover:shadow-xl hover:shadow-indigo-900/30 active:scale-95"
             style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           >
@@ -881,7 +881,7 @@ function Footer() {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{col.title}</p>
               <ul className="space-y-2">
                 {col.links.map(link => (
-                  <li key={link}><Link href="/register" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">{link}</Link></li>
+                  <li key={link}><a href="#" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">{link}</a></li>
                 ))}
               </ul>
             </div>
@@ -903,9 +903,9 @@ function Footer() {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 
-export default function Home() {
+export default function App() {
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-indigo-100">
+    <div className="min-h-screen">
       <Nav />
       <main>
         <Hero />
