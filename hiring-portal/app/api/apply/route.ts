@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     console.log("[apply] ResumeProof response:", JSON.stringify(rpJson));
 
     // ResumeProof may return trackingId or transactionId — normalise to one field
-    trackingId = rpJson.trackingId ?? rpJson.transactionId ?? uuidv4();
+    trackingId = rpJson.transactionId ?? uuidv4();
   } catch (e) {
     console.error("[apply] Failed to call ResumeProof API:", e);
     return NextResponse.json({ error: "Could not reach verification service" }, { status: 502 });
