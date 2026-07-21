@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { KeyCard } from '@/components/KeyCard';
 import { GenerateKeyModal } from '@/components/GenerateKeyModal';
+import { dashboardEmptyState } from '@/lib/siteCopy';
 
 interface ApiKey {
   id: string;
@@ -65,15 +66,15 @@ export default function KeysPage() {
           <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : keys.length === 0 ? (
-        <div className="border border-zinc-800 border-dashed rounded-2xl p-12 text-center bg-zinc-900/30">
+        <div className="border border-zinc-800 border-dashed rounded-2xl p-8 sm:p-12 text-center bg-zinc-900/30">
           <div className="text-4xl mb-4">🔑</div>
-          <h3 className="text-lg font-medium text-white mb-2">No API keys found</h3>
-          <p className="text-zinc-400 mb-6 max-w-md mx-auto">Generate a test key to start experimenting, or a live key for production traffic.</p>
+          <h3 className="text-lg font-medium text-white mb-2">{dashboardEmptyState.headline}</h3>
+          <p className="text-zinc-400 mb-6 max-w-md mx-auto">{dashboardEmptyState.description}</p>
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded-lg font-medium transition"
           >
-            Generate Key
+            {dashboardEmptyState.cta}
           </button>
         </div>
       ) : (
