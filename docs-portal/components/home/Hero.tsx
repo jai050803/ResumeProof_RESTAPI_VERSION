@@ -20,7 +20,7 @@ export function Hero() {
       </h1>
       
       <p className="text-lg md:text-xl text-pub-text-muted max-w-2xl mb-10 leading-relaxed font-pub-prose">
-        Send us a candidate's resume PDF and GitHub profile url. In under 90 seconds, we extract their claims, cross-reference them against actual commit history, and deliver a deterministically scored webhook.
+        Send us a candidate&apos;s resume PDF and GitHub profile url. In under 90 seconds, we extract their claims, cross-reference them against actual commit history, and deliver a deterministically scored webhook.
       </p>
       
       <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
@@ -83,13 +83,13 @@ export function Hero() {
             <pre className="text-zinc-300">
 {`{
   `}
-<Syntax type="key">"transactionId"</Syntax>{`: `}<Syntax type="string">"cm6v5a1bx000008j4c2m8f3z9"</Syntax>{`,
+<Syntax type="key">&quot;transactionId&quot;</Syntax>{`: `}<Syntax type="string">&quot;cm6v5a1bx000008j4c2m8f3z9&quot;</Syntax>{`,
   `}
-<Syntax type="key">"trackingId"</Syntax>{`: `}<Syntax type="string">"req_f8b3c1a9e4d2"</Syntax>{`,
+<Syntax type="key">&quot;trackingId&quot;</Syntax>{`: `}<Syntax type="string">&quot;req_f8b3c1a9e4d2&quot;</Syntax>{`,
   `}
-<Syntax type="key">"status"</Syntax>{`: `}<Syntax type="string">"queued"</Syntax>{`,
+<Syntax type="key">&quot;status&quot;</Syntax>{`: `}<Syntax type="string">&quot;queued&quot;</Syntax>{`,
   `}
-<Syntax type="key">"message"</Syntax>{`: `}<Syntax type="string">"Verification job successfully enqueued. Webhook will be delivered upon completion."</Syntax>{`
+<Syntax type="key">&quot;message&quot;</Syntax>{`: `}<Syntax type="string">&quot;Verification job successfully enqueued. Webhook will be delivered upon completion.&quot;</Syntax>{`
 }`}
             </pre>
           </div>

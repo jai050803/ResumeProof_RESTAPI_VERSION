@@ -13,7 +13,7 @@ export function ProblemSection() {
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-pub-surface border border-zinc-800 rounded-lg p-6 border-l-4 border-l-pub-error">
             <div className="text-4xl font-bold text-pub-text-main mb-2">45<span className="text-pub-text-muted text-2xl">m</span></div>
-            <p className="text-pub-text-muted text-sm font-pub-prose">Average time engineering managers spend manually reviewing a single candidate's GitHub repositories.</p>
+            <p className="text-pub-text-muted text-sm font-pub-prose">Average time engineering managers spend manually reviewing a single candidate&apos;s GitHub repositories.</p>
           </div>
           <div className="bg-pub-surface border border-zinc-800 rounded-lg p-6 border-l-4 border-l-pub-error">
             <div className="text-4xl font-bold text-pub-text-main mb-2">68<span className="text-pub-text-muted text-2xl">%</span></div>
