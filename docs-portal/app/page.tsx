@@ -249,9 +249,9 @@ function HeroMockup() {
             <div className="w-3 h-3 rounded-full bg-amber-400" />
             <div className="w-3 h-3 rounded-full bg-green-400" />
           </div>
-          <div className="flex-1 bg-white rounded-md px-3 py-1 text-xs text-slate-400 border border-slate-200 flex items-center gap-2" style={{ fontFamily: 'Fira Code, monospace' }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1a4 4 0 100 8A4 4 0 005 1zm0 0v8m-4-4h8M1.8 2.8A5.6 5.6 0 005 4a5.6 5.6 0 003.2-1.2M1.8 7.2A5.6 5.6 0 005 6a5.6 5.6 0 003.2 1.2" stroke="#94a3b8" strokeWidth="0.8" strokeLinecap="round" /></svg>
-            audit.resumeproof.dev/vrfy_01HXKM8N
+          <div className="flex-1 min-w-0 bg-white rounded-md px-3 py-1 text-xs text-slate-400 border border-slate-200 flex items-center gap-2" style={{ fontFamily: 'Fira Code, monospace' }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="flex-shrink-0"><path d="M5 1a4 4 0 100 8A4 4 0 005 1zm0 0v8m-4-4h8M1.8 2.8A5.6 5.6 0 005 4a5.6 5.6 0 003.2-1.2M1.8 7.2A5.6 5.6 0 005 6a5.6 5.6 0 003.2 1.2" stroke="#94a3b8" strokeWidth="0.8" strokeLinecap="round" /></svg>
+            <span className="truncate">audit.resumeproof.dev/vrfy_01HXKM8N</span>
           </div>
         </div>
 
@@ -337,7 +337,7 @@ function Hero() {
 
       <div className="relative max-w-6xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div>
+          <div className="min-w-0">
             <div className="mb-6">
               <Badge variant="brand">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -398,7 +398,7 @@ function Hero() {
             </div>
           </div>
 
-          <div className="relative pl-0 lg:pl-8">
+          <div className="relative pl-0 lg:pl-8 min-w-0">
             <HeroMockup />
           </div>
         </div>
@@ -421,7 +421,7 @@ function ProblemSection() {
     <section className="py-20 bg-slate-950">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-medium text-indigo-400 uppercase tracking-widest mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>The Problem</p>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               Resumes are{' '}
@@ -445,7 +445,7 @@ function ProblemSection() {
             </ul>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-medium text-emerald-400 uppercase tracking-widest mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>The Solution</p>
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               Ground truth from{' '}
@@ -566,7 +566,7 @@ function ApiSection() {
     <section id="api" className="py-24 bg-white">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-medium text-indigo-500 uppercase tracking-widest mb-3" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>API Integration</p>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               One endpoint.<br />Complete verification.
@@ -618,7 +618,7 @@ function ApiSection() {
             </div>
           </div>
 
-          <div className="rounded-2xl overflow-hidden shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5">
+          <div className="rounded-2xl overflow-hidden shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 min-w-0">
             <div className="bg-slate-800 flex items-center gap-0 border-b border-slate-700">
               {(['request', 'response'] as CodeTab[]).map(t => (
                 <button

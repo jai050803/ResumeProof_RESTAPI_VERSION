@@ -38,7 +38,7 @@ export const ApiCodeBlock: React.FC<ApiCodeBlockProps> = ({
 
   return (
     <div className="flex flex-col lg:flex-row border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 shadow-2xl">
-      <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-zinc-800">
+      <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-zinc-800 min-w-0">
         <div className="bg-zinc-800/50 px-4 py-2 border-b border-zinc-800 flex items-center space-x-2">
           <div className="flex space-x-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
@@ -49,7 +49,7 @@ export const ApiCodeBlock: React.FC<ApiCodeBlockProps> = ({
         </div>
         <CodeViewer code={reqStr} />
       </div>
-      <div className="w-full lg:w-1/2">
+      <div className="w-full lg:w-1/2 min-w-0">
         <div className="bg-zinc-800/50 px-4 py-2 border-b border-zinc-800 flex items-center">
           <span className="text-xs font-semibold text-zinc-400 tracking-wider">RESPONSE</span>
         </div>

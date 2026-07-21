@@ -57,7 +57,7 @@ export function Hero() {
       <div className="w-full max-w-5xl bg-[#0d1117] border border-zinc-800 rounded-xl overflow-hidden shadow-2xl text-left flex flex-col md:flex-row">
         
         {/* Request Panel */}
-        <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col">
+        <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col min-w-0">
           <div className="flex items-center gap-2 px-4 py-3 bg-[#161b22] border-b border-zinc-800">
             <div className="w-3 h-3 rounded-full bg-zinc-600"></div>
             <div className="w-3 h-3 rounded-full bg-zinc-600"></div>
@@ -75,7 +75,7 @@ export function Hero() {
         </div>
 
         {/* Response Panel */}
-        <div className="w-full md:w-1/2 flex flex-col bg-[#0d1117]">
+        <div className="w-full md:w-1/2 flex flex-col bg-[#0d1117] min-w-0">
           <div className="flex items-center px-4 py-3 bg-[#161b22] border-b border-zinc-800">
             <span className="text-xs text-pub-text-muted font-pub-mono">Response: <span className="text-pub-warning">202 Accepted</span></span>
           </div>
