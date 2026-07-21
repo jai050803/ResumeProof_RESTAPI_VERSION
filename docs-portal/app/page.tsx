@@ -452,13 +452,13 @@ function ProblemSection() {
               <span style={{ color: '#f87171' }}>unverifiable by design.</span>
             </h2>
             <p className="text-slate-400 leading-relaxed mb-6">
-              58% of candidates misrepresent experience. ATS systems pass on textual keywords — not actual ability. Your team wastes hours interviewing candidates who can't code their way out of a hello-world.
+              58% of candidates misrepresent experience. ATS systems pass on textual keywords — not actual ability. Your team wastes hours interviewing candidates who can&apos;t code their way out of a hello-world.
             </p>
             <ul className="space-y-3">
               {[
-                'Claimed "Expert in Rust" — zero Rust commits',
-                '"Led team of 10" — solo contributor on all repos',
-                '"5 years TypeScript" — first TS file dated 8 months ago',
+                'Claimed &quot;Expert in Rust&quot; — zero Rust commits',
+                '&quot;Led team of 10&quot; — solo contributor on all repos',
+                '&quot;5 years TypeScript&quot; — first TS file dated 8 months ago',
                 'Fabricated company names are undetected by ATS',
               ].map(item => (
                 <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
@@ -734,7 +734,7 @@ function SocialProof() {
             },
           ].map(t => (
             <div key={t.author} className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <blockquote className="text-sm text-slate-600 leading-relaxed mb-4">"{t.quote}"</blockquote>
+              <blockquote className="text-sm text-slate-600 leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</blockquote>
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{t.author}</p>
