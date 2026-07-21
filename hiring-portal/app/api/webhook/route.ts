@@ -8,7 +8,12 @@ export const runtime = "nodejs";
 function verifySignature(rawBody: string, signature: string, secret: string): boolean {
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    // timingSafeEqual requires equal-length buffers — both are 64-char hex so this is safe,
+    // but we guard with a length check first to avoid throws on malformed input.
+    const expectedBuf = Buffer.from(expected, "hex");
+    const signatureBuf = Buffer.from(signature, "hex");
+    if (expectedBuf.length !== signatureBuf.length) return false;
+    return timingSafeEqual(expectedBuf, signatureBuf);
   } catch {
     return false;
   }
@@ -25,24 +30,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  // Accept setup pings from ResumeProof so the dashboard can generate and display the secret
+  // Accept setup pings from ResumeProof without signature check
   if (body.event === "test.ping") {
+    console.log("[webhook] Received test.ping — acknowledged");
     return NextResponse.json({ received: true, message: "Ping acknowledged" }, { status: 200 });
   }
 
   const secret = process.env.WEBHOOK_SECRET;
   if (!secret) {
+    console.error("[webhook] WEBHOOK_SECRET env var is not set");
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
 
+  // FIX: pass hex-decoded buffers of equal length to timingSafeEqual
   if (!verifySignature(rawBody, signature, secret)) {
+    console.error("[webhook] Signature mismatch — header:", signature);
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
+
+  console.log("[webhook] Event received:", body.event);
 
   if (body.event === "verification.completed") {
     const data = body.data as any;
 
-    // aiAnalysis and rawGithubData may come as JSON strings from ms1 (Prisma String? columns)
+    // aiAnalysis and rawGithubData arrive as JSON strings from ms1 (Prisma String? columns)
     let aiAnalysis = data.aiAnalysis;
     let rawGithubData = data.rawGithubData;
     if (typeof aiAnalysis === "string") {
@@ -71,17 +82,24 @@ export async function POST(req: NextRequest) {
       createdAt: data.createdAt as string,
     };
 
-    // Find candidate by transactionId
-    const candidate = await getCandidateByTrackingId(data.transactionId);
+    // ResumeProof sends transactionId — look up the candidate by that
+    const lookupId = data.transactionId as string;
+    console.log("[webhook] Looking up candidate by transactionId:", lookupId);
+
+    const candidate = await getCandidateByTrackingId(lookupId);
 
     if (candidate) {
-      await updateCandidateByTrackingId(data.transactionId, {
+      await updateCandidateByTrackingId(lookupId, {
         verificationStatus: result.status,
         verificationResult: result,
         verifiedAt: new Date().toISOString(),
       });
+      console.log("[webhook] Candidate updated:", candidate.email, "→", result.status);
+    } else {
+      // This happens if the trackingId saved during apply doesn't match transactionId.
+      // Check Vercel logs from the apply route to see what key ResumeProof returned.
+      console.warn("[webhook] No candidate found for transactionId:", lookupId);
     }
-    // Even if not found locally, we accept the webhook gracefully
   }
 
   return NextResponse.json({ received: true }, { status: 200 });

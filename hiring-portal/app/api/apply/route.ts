@@ -10,22 +10,27 @@ const ROLES = [
   "Frontend Engineer",
   "Full Stack Engineer",
   "Data Engineer",
-  //new deployment;
 ];
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.RESUMEPROOF_API_KEY;
   const apiUrl = process.env.RESUMEPROOF_API_URL ?? "https://api.resumeproof.online";
-  const appUrl = (() => {
-    try {
-      return new URL(req.url).origin;
-    } catch {
-      return process.env.NEXT_PUBLIC_APP_URL;
-    }
-  })();
+
+  // FIX: use request headers to construct the real public origin.
+  // req.url on Next.js/Vercel is just the path — new URL(req.url).origin is broken.
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  const host  = req.headers.get("host") ?? "";
+  const appUrl = host
+    ? `${proto}://${host}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? "");
 
   if (!apiKey) {
     return NextResponse.json({ error: "API key not configured" }, { status: 500 });
+  }
+
+  if (!appUrl) {
+    console.error("Could not determine appUrl — set NEXT_PUBLIC_APP_URL in env");
+    return NextResponse.json({ error: "Server misconfiguration: app URL unknown" }, { status: 500 });
   }
 
   let formData: FormData;
@@ -35,14 +40,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const phone = (formData.get("phone") as string) || undefined;
-  const role = formData.get("role") as string;
+  const name           = formData.get("name") as string;
+  const email          = formData.get("email") as string;
+  const phone          = (formData.get("phone") as string) || undefined;
+  const role           = formData.get("role") as string;
   const githubUsername = formData.get("githubUsername") as string;
-  const linkedinUrl = (formData.get("linkedinUrl") as string) || undefined;
-  const resumeFile = formData.get("resume") as File | null;
-  const coverNote = (formData.get("coverNote") as string) || undefined;
+  const linkedinUrl    = (formData.get("linkedinUrl") as string) || undefined;
+  const resumeFile     = formData.get("resume") as File | null;
+  const coverNote      = (formData.get("coverNote") as string) || undefined;
 
   // Validation
   if (!name || !email || !role || !githubUsername || !resumeFile) {
@@ -60,7 +65,12 @@ export async function POST(req: NextRequest) {
   rpFormData.append("resume", resumeFile);
   rpFormData.append("githubUrl", `https://github.com/${githubUsername}`);
   if (linkedinUrl) rpFormData.append("linkedinUrl", linkedinUrl);
-  if (appUrl) rpFormData.append("webhookUrl", `${appUrl}/api/webhook`);
+
+  // Correct: now a real public URL like https://yourdomain.com/api/webhook
+  const webhookUrl = `${appUrl}/api/webhook`;
+  rpFormData.append("webhookUrl", webhookUrl);
+
+  console.log("[apply] Sending webhookUrl to ResumeProof:", webhookUrl);
 
   let trackingId: string;
   try {
@@ -72,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     if (!rpRes.ok) {
       const errText = await rpRes.text();
-      console.error("ResumeProof API error:", errText);
+      console.error("[apply] ResumeProof API error:", errText);
       return NextResponse.json(
         { error: "Verification service error", detail: errText },
         { status: 502 }
@@ -80,9 +90,12 @@ export async function POST(req: NextRequest) {
     }
 
     const rpJson = await rpRes.json();
+    console.log("[apply] ResumeProof response:", JSON.stringify(rpJson));
+
+    // ResumeProof may return trackingId or transactionId — normalise to one field
     trackingId = rpJson.trackingId ?? rpJson.transactionId ?? uuidv4();
   } catch (e) {
-    console.error("Failed to call ResumeProof API:", e);
+    console.error("[apply] Failed to call ResumeProof API:", e);
     return NextResponse.json({ error: "Could not reach verification service" }, { status: 502 });
   }
 
