@@ -16,7 +16,13 @@ const ROLES = [
 export async function POST(req: NextRequest) {
   const apiKey = process.env.RESUMEPROOF_API_KEY;
   const apiUrl = process.env.RESUMEPROOF_API_URL ?? "https://api.resumeproof.online";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const appUrl = (() => {
+    try {
+      return new URL(req.url).origin;
+    } catch {
+      return process.env.NEXT_PUBLIC_APP_URL;
+    }
+  })();
 
   if (!apiKey) {
     return NextResponse.json({ error: "API key not configured" }, { status: 500 });
