@@ -11,11 +11,14 @@ import routes from './routes';
 import { globalErrorHandler } from './errors/globalErrorHandler';
 import { AppError } from './errors/AppError';
 
+import { responseTimingMiddleware } from './middlewares/responseTimingMiddleware';
+
 const app = express();
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(responseTimingMiddleware);
 
 app.use('/', routes);
 

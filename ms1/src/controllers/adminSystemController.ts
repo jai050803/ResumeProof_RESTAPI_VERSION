@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { getPrismaClient } from '../config/prismaClient';
 import { redis } from '../config/redisClient';
 import * as queueService from '../services/queueService';
+import { readLatencySnapshots } from '../config/metrics';
 
 const prisma = getPrismaClient();
 
@@ -56,47 +57,6 @@ const checkQueue = async () => {
   }
 };
 
-const generateLatencyStub = (window: string) => {
-  let pointsCount = 48;
-  let intervalMinutes = 30;
-
-  switch (window) {
-    case '1h':
-      pointsCount = 12;
-      intervalMinutes = 5;
-      break;
-    case '6h':
-      pointsCount = 24;
-      intervalMinutes = 15;
-      break;
-    case '24h':
-      pointsCount = 48;
-      intervalMinutes = 30;
-      break;
-    case '7d':
-      pointsCount = 56;
-      intervalMinutes = 180;
-      break;
-    default:
-      pointsCount = 48;
-      intervalMinutes = 30;
-      break;
-  }
-
-  const data = [];
-  const now = Date.now();
-
-  for (let i = pointsCount - 1; i >= 0; i--) {
-    const time = new Date(now - i * intervalMinutes * 60 * 1000).toISOString();
-    const p50 = Math.floor(Math.random() * (150 - 80 + 1)) + 80;
-    const p95 = Math.floor(Math.random() * (400 - 200 + 1)) + 200;
-    const p99 = Math.floor(Math.random() * (800 - 400 + 1)) + 400;
-    data.push({ time, p50, p95, p99 });
-  }
-
-  return data;
-};
-
 export const getHealth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const [dbHealth, redisHealth, queueHealth] = await Promise.all([
@@ -119,12 +79,40 @@ export const getHealth = async (req: Request, res: Response, next: NextFunction)
 
 export const getLatencyHistory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const window = (req.query.window as string) || '24h';
-    const data = generateLatencyStub(window);
+    const windowStr = (req.query.window as string) || '24h';
+    let windowMs = 86400000;
+
+    switch (windowStr) {
+      case '1h':
+        windowMs = 3600000;
+        break;
+      case '6h':
+        windowMs = 21600000;
+        break;
+      case '24h':
+        windowMs = 86400000;
+        break;
+      case '7d':
+        windowMs = 604800000;
+        break;
+      default:
+        windowMs = 86400000;
+        break;
+    }
+
+    const data = await readLatencySnapshots(windowMs);
+
+    if (data.length === 0) {
+      return res.status(200).json({
+        _note: 'No data yet — check back after traffic',
+        data: []
+      });
+    }
 
     res.status(200).json({
-      _note: 'stub — OTel integration pending',
-      data
+      data,
+      windowMs,
+      points: data.length
     });
   } catch (error) {
     next(error);
