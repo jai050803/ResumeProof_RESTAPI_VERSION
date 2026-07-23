@@ -1,9 +1,12 @@
 import axios from 'axios';
 import crypto from 'crypto';
+import { trace, SpanStatusCode } from '@opentelemetry/api';
 import * as clientRepository from '../repositories/clientRepository';
 import * as webhookDeliveryRepository from '../repositories/webhookDeliveryRepository';
 import { AppError } from '../errors/AppError';
 import { logger } from '../utils/logger';
+
+const tracer = trace.getTracer('ms1-gateway');
 
 export const sendWebhookTestPing = async (webhookUrl: string, webhookSecret: string) => {
   const payload = {
@@ -67,6 +70,22 @@ export const dispatchWebhook = async (transactionId: string, clientId: string, p
 
   const delivery = await webhookDeliveryRepository.createDeliveryRecord(transactionId, clientId, webhookUrl, payload);
 
+  let webhookHost = webhookUrl;
+  try {
+    const parsedUrl = new URL(webhookUrl);
+    webhookHost = parsedUrl.host;
+  } catch (e) {
+    // fallback if URL parsing fails
+  }
+
+  let delivered = false;
+  const span = tracer.startSpan('webhook.dispatch');
+  span.setAttributes({
+    'webhook.client_id': clientId,
+    'webhook.url': webhookHost,
+    'webhook.attempt': delivery.attempt || 1
+  });
+
   try {
     const response = await axios.post(webhookUrl, payloadString, {
       headers: {
@@ -77,15 +96,23 @@ export const dispatchWebhook = async (transactionId: string, clientId: string, p
     });
 
     if (response.status >= 200 && response.status < 300) {
+      delivered = true;
       await webhookDeliveryRepository.markDelivered(delivery.id, response.status, JSON.stringify(response.data).substring(0, 500));
     } else {
       await handleWebhookFailure(delivery, response.status, JSON.stringify(response.data).substring(0, 500));
     }
-    } catch (error: unknown) {
-      const err = error as any;
-      logger.error('Webhook dispatch failed:', err.message);
-      const statusCode = err.response?.status || null;
-      const responseBody = err.response?.data ? JSON.stringify(err.response.data).substring(0, 500) : err.message;
-      await handleWebhookFailure(delivery, statusCode, responseBody);
-    }
+    span.setStatus({ code: SpanStatusCode.OK });
+  } catch (error: unknown) {
+    const err = error as any;
+    logger.error('Webhook dispatch failed:', err.message);
+    const statusCode = err.response?.status || null;
+    const responseBody = err.response?.data ? JSON.stringify(err.response.data).substring(0, 500) : err.message;
+    await handleWebhookFailure(delivery, statusCode, responseBody);
+
+    span.recordException(err as Error);
+    span.setStatus({ code: SpanStatusCode.ERROR });
+  } finally {
+    span.setAttribute('webhook.delivered', delivered);
+    span.end();
+  }
 };
