@@ -1,3 +1,6 @@
+import { initTelemetry } from './config/telemetry';
+initTelemetry();
+
 import express from 'express';
 import { startCleanupJob } from './jobs/cleanupJob';
 import helmet from 'helmet';
