@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { authAttempts } from '../config/metrics';
 import * as clientService from '../services/clientService';
 import { registerSchema, verifyEmailQuerySchema, loginSchema, refreshSchema, logoutSchema } from '../schemas/authSchemas';
 import { AppError } from '../errors/AppError';
@@ -45,8 +46,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
     const { email, password } = parseResult.data;
     const tokens = await clientService.authenticateClient(email, password);
+    authAttempts.add(1, { result: 'success' });
     res.status(200).json(tokens);
   } catch (error) {
+    authAttempts.add(1, { result: 'failure' });
     next(error);
   }
 };

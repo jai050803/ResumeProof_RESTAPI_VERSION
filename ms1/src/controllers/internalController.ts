@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { verificationCompleted, verificationDurationMs } from '../config/metrics';
 import * as resultRepository from '../repositories/resultRepository';
 import * as transactionRepository from '../repositories/transactionRepository';
 import * as webhookService from '../services/webhookService';
@@ -28,7 +29,13 @@ export const handleResult = async (req: Request, res: Response, next: NextFuncti
       aiAnalysis: resultData?.aiAnalysis
     });
 
-    await transactionRepository.updateTransactionComplete(transactionId);
+    const transaction = await transactionRepository.updateTransactionComplete(transactionId);
+
+    verificationCompleted.add(1, { 'result.status': result?.status ?? 'unknown' });
+    if (transaction && transaction.createdAt) {
+      const durationMs = Date.now() - new Date(transaction.createdAt).getTime();
+      verificationDurationMs.record(durationMs, { 'result.status': result?.status ?? 'unknown' });
+    }
 
     webhookService.dispatchWebhook(transactionId, clientId, {
       event: 'verification.completed',

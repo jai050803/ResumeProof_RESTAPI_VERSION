@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { verificationSubmitted } from '../config/metrics';
 import * as verificationService from '../services/verificationService';
 import { AppError } from '../errors/AppError';
 import pdfParse from 'pdf-parse';
@@ -29,7 +30,12 @@ export const submitVerification = async (req: Request, res: Response, next: Next
     const { githubUrl } = req.body;
     
     const result = await verificationService.initiateVerification(req.clientId, githubUrl, req.file);
-    
+
+    verificationSubmitted.add(1, {
+      'client.plan': (result as any)?.plan || 'free',
+      'environment': (req.headers['x-environment'] as string) ?? 'live'
+    });
+
     span.setAttributes({
       'verify.client_id': req.clientId || '',
       'verify.tracking_id': result.trackingId || '',

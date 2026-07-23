@@ -1,6 +1,7 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { webhookDispatched, webhookDelivered, webhookLatencyMs } from '../config/metrics';
 import * as clientRepository from '../repositories/clientRepository';
 import * as webhookDeliveryRepository from '../repositories/webhookDeliveryRepository';
 import { AppError } from '../errors/AppError';
@@ -86,6 +87,9 @@ export const dispatchWebhook = async (transactionId: string, clientId: string, p
     'webhook.attempt': delivery.attempt || 1
   });
 
+  webhookDispatched.add(1);
+  const start = Date.now();
+
   try {
     const response = await axios.post(webhookUrl, payloadString, {
       headers: {
@@ -97,6 +101,8 @@ export const dispatchWebhook = async (transactionId: string, clientId: string, p
 
     if (response.status >= 200 && response.status < 300) {
       delivered = true;
+      webhookDelivered.add(1);
+      webhookLatencyMs.record(Date.now() - start);
       await webhookDeliveryRepository.markDelivered(delivery.id, response.status, JSON.stringify(response.data).substring(0, 500));
     } else {
       await handleWebhookFailure(delivery, response.status, JSON.stringify(response.data).substring(0, 500));
