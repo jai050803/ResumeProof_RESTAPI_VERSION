@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -28,6 +29,7 @@ function parseOtelHeaders(raw: string): Record<string, string> {
 
 // ─── SDK initializer ─────────────────────────────────────────────────────────
 export function initTelemetry(): void {
+  dotenv.config();
   const isEnabled = process.env.OTEL_ENABLED === 'true';
 
   if (!isEnabled) {
