@@ -34,7 +34,7 @@ const features = [
 
 export function HomeHero() {
   return (
-    <section className="relative overflow-hidden bg-white px-4 pt-20 pb-10 sm:px-6 sm:pt-24 sm:pb-14 lg:pt-28">
+    <section className="relative overflow-hidden bg-white py-16 px-4 sm:px-6">
       {/* Background pattern */}
       <div className="absolute inset-0 pointer-events-none opacity-60">
         <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -47,36 +47,36 @@ export function HomeHero() {
         </svg>
       </div>
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 text-center">
+      <div className="relative mx-auto flex max-w-screen-lg flex-col items-center gap-10 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-indigo-700">
           <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
           Powered by ResumeProof
         </div>
 
         <div className="mx-auto max-w-3xl space-y-5">
-          <h1 className="text-3xl font-black leading-tight sm:text-5xl">
+          <h1 className="text-3xl sm:text-5xl font-black leading-tight">
             <span className="text-slate-900">TechCorp</span>
             <br />
             <span className="text-indigo-600">Hiring Portal</span>
           </h1>
 
-          <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+          <p className="mx-auto max-w-xl text-sm sm:text-base text-slate-700 leading-relaxed">
             AI-powered resume verification built into every application. We
             verify GitHub activity, skill authenticity, and project claims
             automatically.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-4 sm:flex-row">
           <Link
             href="/apply"
-            className="rounded-[8px] bg-indigo-600 px-7 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-indigo-700"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
           >
             Apply for a Role →
           </Link>
           <Link
             href="/admin"
-            className="rounded-[8px] border border-slate-200 bg-white px-7 py-3 font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-50"
+            className="bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm px-5 py-2.5 rounded-lg border border-slate-200 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
           >
             Admin Dashboard
           </Link>

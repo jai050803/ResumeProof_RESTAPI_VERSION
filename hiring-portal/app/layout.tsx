@@ -23,8 +23,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="font-semibold text-slate-900">TechCorp</span>
             </div>
             <div className="flex items-center gap-4 text-sm font-medium">
-              <Link href="#" className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md hover:bg-slate-50 transition-colors">Apply Now</Link>
-              <Link href="#" className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md hover:bg-slate-50 transition-colors">Check Status</Link>
+              <Link href="/apply" className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md hover:bg-slate-50 transition-colors duration-150">Apply Now</Link>
+              <Link href="/admin" className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md hover:bg-slate-50 transition-colors duration-150">Check Status</Link>
             </div>
           </div>
         </nav>

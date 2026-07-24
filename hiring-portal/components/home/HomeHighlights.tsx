@@ -41,21 +41,21 @@ const highlights = [
 
 export function HomeHighlights() {
   return (
-    <section className="bg-white px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
-      <div className="mx-auto max-w-6xl text-center mb-10">
+    <section className="bg-white py-16 px-4 sm:px-6">
+      <div className="mx-auto max-w-screen-lg text-center mb-10">
         <h2 className="text-2xl font-bold text-slate-900">Why TechCorp Verifies</h2>
-        <p className="mt-2 text-sm text-slate-500">Our advanced platform ensures the highest quality of candidates.</p>
+        <p className="mt-2 text-sm text-slate-700 leading-relaxed">Our advanced platform ensures the highest quality of candidates.</p>
       </div>
       
-      <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid max-w-screen-lg gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {highlights.map((item) => (
           <div
             key={item.label}
-            className="flex flex-col text-left rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            className="flex flex-col text-left rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-150"
           >
             <div className="mb-4">{item.icon}</div>
             <h3 className="mb-2 text-base font-semibold text-slate-900">{item.label}</h3>
-            <p className="text-sm text-slate-500">{item.description}</p>
+            <p className="text-sm text-slate-700 leading-relaxed">{item.description}</p>
           </div>
         ))}
       </div>

@@ -3,9 +3,11 @@ import { HomeHighlights } from "@/components/home/HomeHighlights";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <HomeHero />
-      <HomeHighlights />
-    </main>
+    <div className="animate-fade-in">
+      <main className="min-h-screen bg-[#F8F9FC] text-slate-900">
+        <HomeHero />
+        <HomeHighlights />
+      </main>
+    </div>
   );
 }

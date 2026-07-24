@@ -70,18 +70,25 @@ export default function StatusPage() {
   }, [trackingId]);
 
   if (loading) return (
-    <main className="min-h-screen bg-[#F8F9FC] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-    </main>
+    <div className="animate-fade-in">
+      <main className="min-h-screen bg-[#F8F9FC] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+      </main>
+    </div>
   );
 
   if (error) return (
-    <main className="min-h-screen bg-[#F8F9FC] flex items-center justify-center px-4">
-      <div className="text-center">
-        <p className="text-red-500 mb-4 font-medium">{error}</p>
-        <Link href="/" className="text-indigo-600 hover:underline text-sm font-medium">← Back to Home</Link>
-      </div>
-    </main>
+    <div className="animate-fade-in">
+      <main className="min-h-screen bg-[#F8F9FC] flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-red-500 mb-4 font-medium">{error}</p>
+          <Link href="/" className="text-indigo-600 hover:text-indigo-800 transition-colors duration-150 text-sm font-medium flex items-center gap-1 justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            Back to Home
+          </Link>
+        </div>
+      </main>
+    </div>
   );
 
   if (!candidate) return null;
@@ -98,19 +105,21 @@ export default function StatusPage() {
   }[status] ?? { icon: <IconPending />, color: "text-indigo-600", label: "Verification in Progress" };
 
   return (
-    <main className="min-h-screen bg-[#F8F9FC] py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        <Link href="/" className="text-slate-500 hover:text-slate-700 text-sm transition-colors flex items-center gap-1 mb-6 font-medium">
-          ← Back to Home
-        </Link>
+    <div className="animate-fade-in">
+      <main className="min-h-screen bg-[#F8F9FC] py-10 px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto">
+          <Link href="/" className="text-slate-500 hover:text-slate-700 text-sm transition-colors duration-150 flex items-center gap-1 mb-6 font-medium">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="15 18 9 12 15 6" /></svg>
+            Back to Home
+          </Link>
 
-        {/* Status Header Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm mb-6 text-left relative overflow-hidden">
-          <div className="flex items-center gap-6 relative z-10">
-            <div className="shrink-0">{statusConfig.icon}</div>
-            <div className="flex-1">
-              <h1 className={`text-xl font-bold mb-3 ${statusConfig.color}`}>{statusConfig.label}</h1>
-              <div className="flex flex-wrap items-center gap-3">
+          {/* Status Header Card */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 text-left relative overflow-hidden hover:shadow-md transition-shadow duration-150">
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="shrink-0">{statusConfig.icon}</div>
+              <div className="flex-1">
+                <h1 className={`text-2xl font-bold mb-3 ${statusConfig.color}`}>{statusConfig.label}</h1>
+                <div className="flex flex-wrap items-center gap-3">
                 <div className="font-mono text-xs bg-slate-100 border border-slate-200 rounded px-2 py-1 text-slate-600">
                   {trackingId}
                 </div>
@@ -136,10 +145,10 @@ export default function StatusPage() {
         {/* Results Section */}
         {result && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Confidence Score */}
-              <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+              <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <div className="text-xs text-slate-500 uppercase tracking-wide font-semibold mb-1">Confidence Score</div>
@@ -160,8 +169,8 @@ export default function StatusPage() {
               </div>
 
               {/* Repos Found */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 absolute top-5 right-5">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150 relative">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 absolute top-6 right-6">
                   <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.22-1.82A2 2 0 0 0 9.53 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
                   <polyline points="10 12 8 14 10 16" />
                   <polyline points="14 12 16 14 14 16" />
@@ -171,8 +180,8 @@ export default function StatusPage() {
               </div>
 
               {/* Projects Verified */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative">
-                <div className="absolute top-5 right-5 w-8 h-8">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150 relative">
+                <div className="absolute top-6 right-6 w-8 h-8">
                   <svg viewBox="0 0 36 36" className="w-full h-full">
                     <path className="text-slate-100" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     <path className="text-emerald-500" strokeWidth="4" strokeDasharray={`${(result.verifiedProjects / Math.max(result.claimedProjects, 1)) * 100}, 100`} stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -183,7 +192,7 @@ export default function StatusPage() {
               </div>
 
               {/* Skill Alignment */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
                 <div className={`text-3xl font-bold mb-1 ${result.skillAlignment >= 75 ? "text-emerald-600" : result.skillAlignment >= 50 ? "text-amber-600" : "text-red-600"}`}>{result.skillAlignment}%</div>
                 <div className="text-sm font-medium text-slate-500 mb-3">Skill Alignment</div>
                 <div className="flex gap-1 h-1.5 w-full">
@@ -194,7 +203,7 @@ export default function StatusPage() {
               </div>
 
               {/* Commit Authorship */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-center">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150 flex flex-col justify-center">
                 <div className="text-sm font-medium text-slate-500 mb-2">Commit Authorship</div>
                 <div className="flex items-center gap-2">
                   {result.reposFound > 0 ? (
@@ -221,8 +230,8 @@ export default function StatusPage() {
 
             {/* Verified Skills */}
             {result.matchedSkills && result.matchedSkills.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">Verified Skills</h3>
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
+                <h3 className="text-base font-semibold text-slate-900 mb-3">Verified Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {result.matchedSkills.map((s) => (
                     <span key={s} className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
@@ -233,8 +242,8 @@ export default function StatusPage() {
 
             {/* Missing Skills */}
             {result.missingSkills && result.missingSkills.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">Skills Not Found in GitHub</h3>
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
+                <h3 className="text-base font-semibold text-slate-900 mb-3">Skills Not Found in GitHub</h3>
                 <div className="flex flex-wrap gap-2">
                   {result.missingSkills.map((s) => (
                     <span key={s} className="bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
@@ -245,8 +254,8 @@ export default function StatusPage() {
 
             {/* Flags */}
             {result.flags && result.flags.length > 0 && (
-              <div className="bg-amber-50/30 border border-amber-200 rounded-xl p-5 shadow-sm">
-                <h3 className="flex items-center gap-2 font-semibold text-sm text-amber-700 mb-3">
+              <div className="bg-amber-50/30 border border-amber-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
+                <h3 className="flex items-center gap-2 font-semibold text-base text-amber-700 mb-3">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
                     <line x1="12" y1="9" x2="12" y2="13" />
@@ -267,7 +276,7 @@ export default function StatusPage() {
 
             {/* AI Assessment */}
             {result.aiAnalysis?.summary && (
-              <div className="bg-indigo-50/20 border border-indigo-100 rounded-xl p-6 shadow-sm">
+              <div className="bg-indigo-50/20 border border-indigo-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
                 <div className="flex items-center gap-2 mb-3">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
                     <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
@@ -298,6 +307,7 @@ export default function StatusPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

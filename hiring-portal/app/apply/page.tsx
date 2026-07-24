@@ -79,14 +79,16 @@ export default function ApplyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F8F9FC] py-12 px-4">
-      <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-5 gap-12 items-start">
-        {/* Left Sticky Panel */}
-        <div className="lg:col-span-2 sticky top-24 mb-10 lg:mb-0">
-          <Link href="/" className="text-slate-500 hover:text-slate-700 text-sm transition-colors flex items-center gap-1 mb-6">
-            ← Back
-          </Link>
-          <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+    <div className="animate-fade-in">
+      <main className="min-h-screen bg-[#F8F9FC] py-10 px-4 sm:px-6">
+        <div className="max-w-screen-lg mx-auto lg:grid lg:grid-cols-5 gap-6 items-start">
+          {/* Left Sticky Panel */}
+          <div className="lg:col-span-2 sticky top-24 mb-10 lg:mb-0">
+            <Link href="/" className="text-slate-500 hover:text-slate-700 text-sm transition-colors flex items-center gap-1 mb-6">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><polyline points="15 18 9 12 15 6" /></svg>
+              Back
+            </Link>
+            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
             <div className="inline-block px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-semibold mb-4">
               AI-Powered Verification
             </div>
@@ -130,34 +132,34 @@ export default function ApplyPage() {
 
         {/* Right Form Card */}
         <div className="lg:col-span-3">
-          <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-slate-900">Your Application</h2>
+              <h2 className="text-lg font-semibold text-slate-800">Your Application</h2>
               <p className="text-slate-500 text-sm mt-1">Fill in the details below — all starred fields are required.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name + Email */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name <span className="text-indigo-500">*</span></label>
-                  <input name="name" required placeholder="Jane Smith" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" />
+                  <input name="name" required placeholder="Jane Smith" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 placeholder-slate-400" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Email <span className="text-indigo-500">*</span></label>
-                  <input name="email" type="email" required placeholder="jane@example.com" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" />
+                  <input name="email" type="email" required placeholder="jane@example.com" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 placeholder-slate-400" />
                 </div>
               </div>
 
               {/* Phone + Role */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Phone</label>
-                  <input name="phone" type="tel" placeholder="+91 98765 43210" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" />
+                  <input name="phone" type="tel" placeholder="+91 98765 43210" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 placeholder-slate-400" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Role Applying For <span className="text-indigo-500">*</span></label>
-                  <select name="role" required defaultValue="" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 has-[option:checked[value='']]:text-slate-400 text-slate-900">
+                  <select name="role" required defaultValue="" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 has-[option:checked[value='']]:text-slate-400 text-slate-900">
                     <option value="" disabled className="text-slate-400">Select role</option>
                     {ROLES.map((r) => <option key={r} value={r} className="text-slate-900">{r}</option>)}
                   </select>
@@ -165,17 +167,17 @@ export default function ApplyPage() {
               </div>
 
               {/* GitHub + LinkedIn */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">GitHub Username <span className="text-indigo-500">*</span></label>
-                  <div className="flex bg-white border border-slate-200 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 overflow-hidden">
+                  <div className="flex bg-white border border-slate-200 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-1 overflow-hidden">
                     <span className="flex items-center justify-center bg-slate-50 border-r border-slate-200 px-3 text-slate-400 text-sm">@</span>
                     <input name="githubUsername" required placeholder="janedoe" className="flex-1 w-full text-slate-900 px-3 py-2.5 text-sm focus:outline-none placeholder-slate-400" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">LinkedIn URL</label>
-                  <input name="linkedinUrl" type="url" placeholder="linkedin.com/in/jane" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" />
+                  <input name="linkedinUrl" type="url" placeholder="linkedin.com/in/jane" className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 placeholder-slate-400" />
                 </div>
               </div>
 
@@ -219,7 +221,7 @@ export default function ApplyPage() {
               {/* Cover Note */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Cover Note (optional)</label>
-                <textarea name="coverNote" rows={3} placeholder="Tell us why you're a great fit..." className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400 resize-none" />
+                <textarea name="coverNote" rows={3} placeholder="Tell us why you're a great fit..." className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 placeholder-slate-400 resize-none" />
               </div>
 
               {state === "error" && (
@@ -236,7 +238,7 @@ export default function ApplyPage() {
               <button
                 type="submit"
                 disabled={state === "loading"}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
               >
                 {state === "loading" ? (
                   <>
@@ -254,6 +256,7 @@ export default function ApplyPage() {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

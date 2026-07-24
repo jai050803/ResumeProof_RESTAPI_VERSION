@@ -117,37 +117,39 @@ function AdminContent() {
 
   if (!authed) {
     return (
-      <main className="min-h-screen bg-[#F8F9FC] px-4 flex items-center justify-center">
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8 max-w-sm w-full text-center">
-          <div className="flex justify-center mb-4">
-            <IconLock />
+      <div className="animate-fade-in">
+        <main className="min-h-screen bg-[#F8F9FC] px-4 flex items-center justify-center">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 max-w-sm w-full text-center hover:shadow-md transition-shadow duration-150">
+            <div className="flex justify-center mb-4">
+              <IconLock />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h1>
+            <p className="text-sm text-slate-500 mb-6">Enter your admin key to view candidates.</p>
+            <form onSubmit={handleAuth} className="space-y-4">
+              <input
+                type="password"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="Admin key"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+              />
+              {authError && <p className="text-sm text-red-500 text-left">Invalid key</p>}
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+              >
+                Access Dashboard
+              </button>
+              <Link
+                href="/"
+                className="mt-4 block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors duration-150"
+              >
+                Go Home
+              </Link>
+            </form>
           </div>
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h1>
-          <p className="text-sm text-slate-500 mb-6">Enter your admin key to view candidates.</p>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <input
-              type="password"
-              value={keyInput}
-              onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="Admin key"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            {authError && <p className="text-sm text-red-500 text-left">Invalid key</p>}
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
-            >
-              Access Dashboard
-            </button>
-            <Link
-              href="/"
-              className="mt-4 block text-sm font-medium text-indigo-600 hover:text-indigo-800"
-            >
-              Go Home
-            </Link>
-          </form>
-        </div>
-      </main>
+        </main>
+      </div>
     );
   }
 
@@ -157,22 +159,23 @@ function AdminContent() {
   const flaggedOrRejected = candidates.filter((c) => c.verificationStatus === "flagged" || c.verificationStatus === "rejected").length;
 
   return (
-    <main className="min-h-screen bg-[#F8F9FC]">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 py-5 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Candidates</h1>
-          <p className="text-slate-500 text-sm mt-1">Review and manage all applications</p>
-        </div>
-        <button
-          onClick={fetchCandidates}
-          disabled={loading}
-          className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg px-4 py-2 hover:bg-slate-50 transition-colors disabled:opacity-50"
-        >
-          <IconRefresh />
-          Refresh
-        </button>
-      </header>
+    <div className="animate-fade-in">
+      <main className="min-h-screen bg-[#F8F9FC]">
+        {/* Header */}
+        <header className="bg-white border-b border-slate-200 px-6 py-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Candidates</h1>
+            <p className="text-slate-500 text-sm mt-1">Review and manage all applications</p>
+          </div>
+          <button
+            onClick={fetchCandidates}
+            disabled={loading}
+            className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm px-5 py-2.5 rounded-lg border border-slate-200 transition-colors duration-150 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+          >
+            <IconRefresh />
+            Refresh
+          </button>
+        </header>
 
       {/* Stats Bar */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap">
@@ -196,7 +199,7 @@ function AdminContent() {
 
       {/* Table Section */}
       <div className="p-6">
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-150">
           {loading && candidates.length === 0 ? (
             <div className="flex justify-center py-20">
               <IconSpinner />
@@ -265,7 +268,7 @@ function AdminContent() {
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <Link href={`/status/${c.trackingId}`} className="text-indigo-600 text-xs font-medium hover:text-indigo-800 flex items-center whitespace-nowrap">
+                          <Link href={`/status/${c.trackingId}`} className="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors duration-150 flex items-center whitespace-nowrap">
                             View
                             <IconArrowRight />
                           </Link>
@@ -279,7 +282,8 @@ function AdminContent() {
           )}
         </div>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
