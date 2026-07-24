@@ -13,7 +13,7 @@ export interface VerificationResult {
   missingSkills: string[];
   flags: string[];
   aiAnalysis: AiAnalysis | null;
-  rawGithubData: Record<string, unknown> | null;
+  rawGithubData: RawGithubData | null;
   createdAt: string;
 }
 
@@ -51,4 +51,25 @@ export interface Candidate {
   verificationResult: VerificationResult | null;
   verifiedAt: string | null;
   appliedAt: string;
+}
+
+export interface QualitySignals {
+  accountAuthenticityScore: number;
+  forkRatio: number;
+  forkCount: number;
+  originalCount: number;
+  readmeCoverage: number;
+  reposWithGoodReadme: number;
+  lastCommitDaysAgo: number;
+  activeMonthsInLastYear: number;
+  contributionPattern: string;
+  consistentWeeksLast6Months: number;
+  primaryLanguage: string;
+  languagesByDepth: { language: string; totalBytes: number; repoCount: number }[];
+}
+
+export interface RawGithubData {
+  username?: string;
+  qualitySignals?: QualitySignals;
+  [key: string]: unknown;
 }

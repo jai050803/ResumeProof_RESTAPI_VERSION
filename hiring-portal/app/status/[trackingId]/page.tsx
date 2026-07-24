@@ -228,32 +228,129 @@ export default function StatusPage() {
               </div>
             </div>
 
-            {/* Verified Skills */}
-            {result.matchedSkills && result.matchedSkills.length > 0 && (
+            {/* Project Matches */}
+            {result.aiAnalysis?.projectMatches && result.aiAnalysis.projectMatches.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
-                <h3 className="text-base font-semibold text-slate-900 mb-3">Verified Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {result.matchedSkills.map((s) => (
-                    <span key={s} className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
+                <h3 className="text-base font-semibold text-slate-900 mb-4">Project Verification Details</h3>
+                <div className="space-y-4">
+                  {result.aiAnalysis.projectMatches.map((pm, i) => (
+                    <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-100 gap-4">
+                      <div>
+                        <div className="font-semibold text-slate-900 text-sm mb-1">{pm.claimedProject}</div>
+                        {pm.matchedRepo && (
+                          <div className="text-xs text-slate-500 flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+                            {pm.matchedRepo}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {pm.matchConfidence > 0 && (
+                          <div className="text-xs font-medium text-slate-500">
+                            {pm.matchConfidence}% Match
+                          </div>
+                        )}
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          pm.verdict === 'verified' ? 'bg-emerald-100 text-emerald-700' :
+                          pm.verdict === 'partial' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-200 text-slate-600'
+                        }`}>
+                          {pm.verdict === 'verified' ? 'Verified' : pm.verdict === 'partial' ? 'Partial Match' : 'Not Found'}
+                        </span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Missing Skills */}
-            {result.missingSkills && result.missingSkills.length > 0 && (
+            {/* Skill Verification */}
+            {result.aiAnalysis?.skillVerification ? (
               <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
-                <h3 className="text-base font-semibold text-slate-900 mb-3">Skills Not Found in GitHub</h3>
-                <div className="flex flex-wrap gap-2">
-                  {result.missingSkills.map((s) => (
-                    <span key={s} className="bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
-                  ))}
+                <h3 className="text-base font-semibold text-slate-900 mb-4">Skill Verification Details</h3>
+                
+                {result.aiAnalysis.skillVerification.verifiedSkills.length > 0 && (
+                  <div className="mb-5">
+                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polyline points="20 6 9 17 4 12"/></svg>
+                      Verified on GitHub
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {result.aiAnalysis.skillVerification.verifiedSkills.map((s) => (
+                        <span key={s} className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {result.aiAnalysis.skillVerification.unverifiedSkills.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Claimed but Unverified
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {result.aiAnalysis.skillVerification.unverifiedSkills.map((s) => (
+                        <span key={s} className="bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Fallback to original skills display if aiAnalysis is missing */}
+                {result.matchedSkills && result.matchedSkills.length > 0 && (
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <h3 className="text-base font-semibold text-slate-900 mb-3">Verified Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {result.matchedSkills.map((s) => (
+                        <span key={s} className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {result.missingSkills && result.missingSkills.length > 0 && (
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <h3 className="text-base font-semibold text-slate-900 mb-3">Skills Not Found in GitHub</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {result.missingSkills.map((s) => (
+                        <span key={s} className="bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium px-3 py-1 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* GitHub Quality Signals */}
+            {result.rawGithubData?.qualitySignals && (
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
+                <h3 className="text-base font-semibold text-slate-900 mb-4">GitHub Authenticity Signals</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div className="text-xs text-slate-500 font-medium mb-1">Authenticity Score</div>
+                    <div className="text-2xl font-bold text-slate-900">{result.rawGithubData.qualitySignals.accountAuthenticityScore}<span className="text-sm text-slate-400 font-medium">/100</span></div>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div className="text-xs text-slate-500 font-medium mb-1">Active Months</div>
+                    <div className="text-2xl font-bold text-slate-900">{result.rawGithubData.qualitySignals.activeMonthsInLastYear}<span className="text-sm text-slate-400 font-medium">/12</span></div>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div className="text-xs text-slate-500 font-medium mb-1">Primary Language</div>
+                    <div className="text-lg font-bold text-slate-900 mt-1">{result.rawGithubData.qualitySignals.primaryLanguage}</div>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div className="text-xs text-slate-500 font-medium mb-1">Contribution Pattern</div>
+                    <div className="text-sm font-bold text-slate-900 mt-1 capitalize">{result.rawGithubData.qualitySignals.contributionPattern.replace('_', ' ')}</div>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Flags */}
-            {result.flags && result.flags.length > 0 && (
+            {((result.flags && result.flags.length > 0) || (result.aiAnalysis?.redFlags && result.aiAnalysis.redFlags.length > 0)) && (
               <div className="bg-amber-50/30 border border-amber-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
                 <h3 className="flex items-center gap-2 font-semibold text-base text-amber-700 mb-3">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -264,7 +361,7 @@ export default function StatusPage() {
                   Review Flags
                 </h3>
                 <ul className="space-y-2">
-                  {result.flags.map((f, i) => (
+                  {[...Array.from(new Set([...(result.flags || []), ...(result.aiAnalysis?.redFlags || [])]))].map((f, i) => (
                     <li key={i} className="flex items-start gap-2 text-amber-800 text-sm">
                       <span className="text-amber-500 mt-1">•</span>
                       <span>{f}</span>
@@ -277,18 +374,25 @@ export default function StatusPage() {
             {/* AI Assessment */}
             {result.aiAnalysis?.summary && (
               <div className="bg-indigo-50/20 border border-indigo-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-150">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
-                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-                  </svg>
-                  <h3 className="text-indigo-700 text-xs uppercase tracking-widest font-semibold">AI Assessment</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600">
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                    </svg>
+                    <h3 className="text-indigo-900 text-sm uppercase tracking-widest font-bold">AI Assessment</h3>
+                  </div>
+                  {result.aiAnalysis.overallVerdict && (
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      result.aiAnalysis.overallVerdict === 'authentic' ? 'bg-emerald-100 text-emerald-800' :
+                      result.aiAnalysis.overallVerdict === 'mostly_authentic' ? 'bg-indigo-100 text-indigo-800' :
+                      result.aiAnalysis.overallVerdict === 'suspicious' ? 'bg-amber-100 text-amber-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {result.aiAnalysis.overallVerdict.replace('_', ' ')}
+                    </span>
+                  )}
                 </div>
-                <p className="text-slate-700 text-sm leading-relaxed mb-4">{result.aiAnalysis.summary}</p>
-                {result.aiAnalysis.overallVerdict && (
-                  <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">
-                    {result.aiAnalysis.overallVerdict}
-                  </span>
-                )}
+                <p className="text-slate-700 text-sm leading-relaxed">{result.aiAnalysis.summary}</p>
               </div>
             )}
           </div>
