@@ -65,7 +65,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <WebhookConfigPanel initialWebhookUrl={profile?.webhookUrl} />
+          <WebhookConfigPanel initialWebhookUrl={profile?.webhookUrl} />
       </div>
     </div>
   );
