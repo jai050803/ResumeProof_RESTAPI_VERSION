@@ -80,6 +80,10 @@ GITHUB QUALITY SIGNALS:
 
 This gives you enough signal to reason about whether the GitHub profile looks like a real developer vs a resume-padding account.
 
+CRITICAL INSTRUCTIONS:
+1. Many professional developers work on private company repositories. Do NOT flag a profile as "suspicious" or "fabricated", or issue red flags, solely because their claimed professional projects cannot be found in their public GitHub data. Assess their authenticity based on the code they do have.
+2. For `commitsByCandidate`, use the `commit_count` provided in the Top repos data. If a project is not found, set it to 0, but do not issue a red flag for it if it appears to be a private company project.
+
 Return ONLY a JSON object with this exact shape:
 {{
   "projectMatches": [

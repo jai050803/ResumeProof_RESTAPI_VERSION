@@ -35,11 +35,15 @@ def compute_confidence_score(
     verified_projects_count = sum(1 for p in project_matches if p.get("verdict") == "verified")
     
     commit_authorship = any(p.get("commitsByCandidate", 0) > 0 for p in project_matches)
-    
+    if not commit_authorship and total_commits > 0:
+        commit_authorship = True
+        
     # 2. Project verification (35 pts)
     if claimed_projects_count > 0:
         verification_rate = verified_projects_count / claimed_projects_count
         base_score += int(verification_rate * 35)
+        if verified_projects_count == 0 and total_commits >= 50:
+            base_score += 15
     else:
         # No projects claimed — neutral
         base_score += 15
@@ -51,11 +55,16 @@ def compute_confidence_score(
     # 4. Skill alignment (20 pts)
     claimed_skills = set(resume_claims.get("claimed_skills", []))
     github_langs = set(raw_github_data.get("all_languages", {}).keys())
+    ai_verified_skills = set(ai_analysis.get("skillVerification", {}).get("verifiedSkills", []))
     
     skill_alignment = 0
     if claimed_skills:
-        overlap_count = len([s for s in claimed_skills if any(l.lower() == s.lower() for l in github_langs)])
-        overlap = overlap_count / len(claimed_skills)
+        overlap_count = len([
+            s for s in claimed_skills 
+            if any(l.lower() == s.lower() for l in github_langs) or 
+               any(v.lower() == s.lower() for v in ai_verified_skills)
+        ])
+        overlap = min(1.0, overlap_count / len(claimed_skills))
         skill_alignment = int(overlap * 100)
         base_score += int(overlap * 20)
         
@@ -74,7 +83,7 @@ def compute_confidence_score(
     else: status = "rejected"
     
     # Auto-flags
-    if verified_projects_count == 0 and claimed_projects_count > 0:
+    if verified_projects_count == 0 and claimed_projects_count > 0 and total_commits < 10:
         flags.append("NO_PROJECTS_VERIFIED")
     if not commit_authorship and claimed_projects_count > 0:
         flags.append("NO_COMMIT_AUTHORSHIP")
